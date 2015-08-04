@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<!--
+ Copyright (C) 2015 3NSoft Inc.
+ 
+ This program is free software: you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation, either version 3 of the License, or (at your option) any later
+ version.
+ 
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ See the GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License along with
+ this program. If not, see <http://www.gnu.org/licenses/>.
+ -->
+<head>
+	<meta charset="UTF-8">
+	<title>ASMail Client App</title>
+	<link type="text/css" rel="stylesheet" href="../scripts/bootstrap.min.css">
+	<link type="text/css" rel="stylesheet" href="./app.css">
+	<script type="text/javascript" src="../scripts/jquery-2.1.0.min.js"></script>
+	<script type="text/javascript" src="../scripts/q.js"></script>
+	<script type="text/javascript" src="../scripts/ecma-nacl.js"></script>
+	<script type="text/javascript" src="../scripts/jsuri.js"></script>
+	<script type="text/javascript" src="./app.js"></script>
+</head>
+<body>
+
+	<div class="navbar navbar-default" role="navigation">
+		<div class="navbar-brand">ASMail</div>
+		<ul class="nav navbar-nav">
+			<li name="deliver-mail"><a onclick="pageRouter.openView('deliver-mail')">
+					Send Mail</a></li>
+			<li name="retrieve-mail"><a onclick="pageRouter.openView('retrieve-mail')">
+					Check Mail</a></li>
+			<li name="config"><a onclick="pageRouter.openView('config')">
+					Settings & Keys</a></li>
+			<li><a href="#" target="_blank">Open New App</a></li>
+		</ul>
+		<p class="navbar-text navbar-right user-id" style="margin-right: 1em;"></p>
+	</div>
+
+	<div id="config" style="display: none;">
+
+		<div>
+			Keyring's published key id: <span class="published-key-id"></span><br>
+			<button class="btn btn-default"
+				onclick="confCtrl.updatePublishedKey()">
+				Update keyring's published key</button>
+		</div>
+
+		<div>
+			Public key registered at ASMail server, id: <span
+				class="published-key-id-on-server"></span><br>
+			<button class="btn btn-default"
+				onclick="confCtrl.pushPublishedKeyToServer()">
+				Register published key on server</button>
+		</div>
+
+
+
+	</div>
+
+	<div id="deliver-mail" style="display: none;">
+
+		<p>In ASMail sender is communicating directly with recipient's
+			mail server. Recipient's ASMail server can either be found by DNS
+			lookup, or be known through some third channel communication.</p>
+		<p>There are two ways to send mail. One way is to tell sender's
+			address to server, in which case MailerId authentication will be
+			required. The second way is not to expose sender's identity to
+			server, in which case we call such delivery anonymous. In both of
+			these cases server may refuse to accept mail, depending on
+			recipient's account settings.</p>
+
+		<form onsubmit="mailCtrl.sendMsg(this); return false;">
+
+			<label><input name="auth" type="checkbox">
+				Authenticate sender to server</label> <br> <label>Enter
+				recipient's mail address: <input name="recipient" type="email"
+				style="width: 15em;">
+			</label>
+
+			<p>With parameters above, one may do a pre-flight request to
+				know, what is the maximum allowed message size, and whether the
+				message will be accepted.</p>
+
+			<button class="btn btn-default" onclick=
+				"mailCtrl.sendPreFlight(this.parentElement); return false;">
+				Pre-Flight Request</button>
+			<br>
+			<br> <label>Subject: <input name="msgSubject"
+				type="text" style="width: 15em;"></label>
+			<p>
+				<label>Text body:</label><br>
+				<textarea name="msgTextBody" rows="5" cols="40"></textarea>
+			</p>
+
+			<button class="btn btn-default" type="submit">Send</button>
+		</form>
+
+	</div>
+
+	<div id="retrieve-mail" style="display: none;">
+		
+		<table id="msg-inbox" class="table">
+			<thead>
+				<tr>
+					<th>Date</th>
+					<th>Message Id<br>(server's label)</th>
+					<th>Message Size</th>
+					<th>Keys Info</th>
+					<th>Status</th>
+					<th>Verified Sender</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr><td colspan="7">No Messages</td></tr>
+			</tbody>
+		</table>
+		
+		<button class="btn btn-default"
+			onclick="mailCtrl.listMsgs()">Update List of Message</button>
+		<br>
+
+	</div>
+	
+	<div id="msg-display" class="dialog-bkgrnd" style="display: none;">
+		<div class="msg-view">
+			<button class="btn btn-default btn-xs" style="float: right;"
+				onclick="mailCtrl.closeMsgView()">X</button>
+			<span>From: <em class="sender-addr"></em></span>
+			<div>
+				<strong class="sender-trust"></strong>
+				<div class="btn btn-warning btn-sm start-trust">
+					Start trusting <span class="sender-addr"></span>
+				</div>
+			</div>
+			<h3 class="msg-subject"></h3>
+			<div class="msg-plain-txt"></div>
+		</div>
+	</div>
+
+	<div id="mailerid-credentials" class="dialog-bkgrnd" style="display: none;">
+		<div class="credentials-dialog">
+
+			<h3>MailerId Authentication</h3>
+
+			<form name="mailerid-credentials"
+				onsubmit="mailerIdentity.completeCredentialsEntry(this); return false;">
+
+				<label>Mail address:<input name="mailerid"
+					id="mailer-id-entry" type="email" style="width: 15em;"></label> <br>
+				<label>Passphrase:<input name="pass" type="password"
+					style="width: 15em;"></label> <br>
+
+				<button class="btn btn-default" type="submit">Enter</button>
+				<button class="btn btn-default" type="button"
+					onclick="mailerIdentity.completeCredentialsEntry(this.parentElement, true); return false;">
+					Cancel</button>
+			</form>
+
+		</div>
+	</div>
+
+	<div id="storage-credentials" class="dialog-bkgrnd" style="display: none;">
+		<div class="credentials-dialog">
+	
+			<h3>Master key to open storage root</h3>
+	
+			<p>Master key is derived in this test from a passphrase, using
+				derivation parameters, stored on the server.
+			</p>
+	
+			<form name="storage-key-entry"
+				onsubmit="xspStorage.completeCredentialsEntry(this); return false;">
+	
+				<label>Files' passphrase:<input name="pass" type="password"
+					style="width: 15em;"></label> <br>
+	
+				<button class="btn btn-default" type="submit">Enter</button>
+				<button class="btn btn-default" type="button"
+					onclick="xspStorage.completeCredentialsEntry(this.parentElement, true); return false;">
+					Cancel</button>
+			</form>
+		</div>
+
+	</div>
+
+	<h4>Process Log (echoed to console)</h4>
+	<div id="log"
+		style="border-style: solid; border-width: thin; border-color: gray; height: 15em; overflow: auto;"></div>
+
+</body>
+</html>

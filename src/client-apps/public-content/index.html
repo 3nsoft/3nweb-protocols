@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<!--
+ Copyright (C) 2015 3NSoft Inc.
+ 
+ This program is free software: you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation, either version 3 of the License, or (at your option) any later
+ version.
+ 
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ See the GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License along with
+ this program. If not, see <http://www.gnu.org/licenses/>.
+ -->
+<head>
+<meta charset="UTF-8">
+<title>ASMail</title>
+</head>
+<body>
+
+	<h1>ASMail (Authenticated Secure Mail)</h1>
+
+	<p>To run this demo application, do the following service setup
+		steps:</p>
+	<ul>
+		<li><a href="https://localhost:8080/mailerid-users/"
+			target="_blank"> Create some test user identities</a>. These are used
+			in authentication steps, which are done both by server, and by client
+			sides. Identity verification should be done in a non-tracking
+			fashion. Mozilla's BrowserID accomplishes just that within a browser.
+			We liberate from browser's origins best protocol's aspects, placing
+			them into our MailerId protocol, which is used for identities.</li>
+		<li><a href="https://localhost:8080/asmail-users/"
+			target="_blank"> Create account(s) in ASMail server for
+				recipient(s)</a>. ASMail server only serves a role of an always
+			reachable inbox, and a source of recipient's initial public key (in
+			the absence of an off-line introduction). Sender's client talks
+			directly with recipient's server. Therefore, ASMail server only knows
+			that its user gets messages, but cannot know to whom user sends
+			messages.</li>
+		<li><a href="https://localhost:8080/3nstorage-users/"
+			target="_blank"> Create account(s) in 3NStorage server for all
+				users</a>. All messages are encrypted with short-lived keys. Each
+			sender-recipient pair has its own keys. This creates a requirement to
+			have a key management based on some storage. For some
+			implementations, such storage can/must be local. But for an everyday
+			common use of multiple synchronized devices, we need an online
+			storage service, which adheres to the principles of 3N (<em>when
+				there is No unencrypted data, when there is No unnecessary metadata,
+				then there is Nothing to steal from the server</em>).</li>
+	</ul>
+
+	<p>
+		<a href="asmail/app.html" target="_blank">Open ASMail demo app</a>.
+		<br>
+		Note that app's html+js doesnot have to be served from a server.
+		It is meant and it will run from a local filesystem, subject to
+		your browser's settings.
+		But now, we serve it here from the server only for the sake of
+		simplicity.
+	</p>
+
+</body>
+</html>

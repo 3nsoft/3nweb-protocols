@@ -1,0 +1,25 @@
+{
+  "name": "3N-Protocols",
+  "version": "0.0.1",
+  "description": "Spec implementation of 3N protocols with simplistic clients that show flows on the wire.",
+  "private": true,
+  "main": "dist/app.js",
+  "author": "3NSoft Inc.",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "browserify": "^9.0.8",
+    "ecma-nacl": "^2.2.0",
+    "express": "^4.12.3",
+    "gulp": "^3.8.11",
+    "gulp-nodeunit-runner": "^0.2.2",
+    "gulp-typescript": "^2.6.0",
+    "jsuri": "^1.3.1",
+    "merge2": "^0.3.4",
+    "nodeunit": "^0.9.1",
+    "q": "^1.2.0",
+    "tsify": "^0.8.1",
+    "vinyl-source-stream": "^1.1.0",
+    "gulp-typedoc": "^1.1.0"
+  },
+  "readmeFilename": "README.md"
+}

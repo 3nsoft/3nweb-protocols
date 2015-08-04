@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<!--
+ Copyright (C) 2015 3NSoft Inc.
+ 
+ This program is free software: you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation, either version 3 of the License, or (at your option) any later
+ version.
+ 
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ See the GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License along with
+ this program. If not, see <http://www.gnu.org/licenses/>.
+ -->
+<head>
+	<meta charset="UTF-8">
+	<title>MailerId test users</title>
+	<script type="text/javascript" src="./scripts/q.js"></script>
+	<script type="text/javascript" src="./scripts/ecma-nacl.js"></script>
+	<script type="text/javascript" src="./scripts/jsuri.js"></script>
+	<script type="text/javascript" src="./index.js"></script>
+</head>
+
+<body>
+
+<h1>MailerId test users</h1>
+
+<div id="start-view" style="display: none;">
+
+	<p>MailerId provides an identity, like
+<a href="https://developer.mozilla.org/en-US/Persona/Protocol_Overview"
+target="_blank">Mozilla's BrowserID protocol does</a>.
+Identity provider certifies user's short lived key, and a third party verifies
+user's key cryptographically. This establishes a trust between an identity and a third
+party, based on a pre-existing trust, between the user and her identity provider.</p>
+	<p>In BrowserID protocol, user, confirming her pre-existing relationship,
+verifies herself to identity provider via password, entered on provider's special page.
+In MailerId, pre-existing relationship is confirmed cryptographically, similarly to
+SSH key-based authentication. This mechanism we call Public Key Login.</p>
+	<p>Public Key Login (PKL for short) can be used instead of simple password-based
+login on any site. This page, besides making demo setup, illustrates how PKL works.</p>
+	
+	<button onclick="openView('new-account-view')">Make New Account</button>
+	<button onclick="openView('login-view')">Login into Existing Account</button>
+
+</div>
+
+<div id="new-account-view" style="display: none;">
+
+<h2>Create new account in a test MailerId service @localhost</h2>
+
+<form id="new-account-form" onsubmit="processNewUserInfoAndSend(this); return false;">
+
+<p>
+User must make up a username:<br>
+<input name="username" type="text"><br>
+and server will make sure, that it is unique (as usual).
+</p>
+
+<p>
+User should provide to the server 32-byte (256-bit) public key, created from
+some secret 32-byte key by <a href="http://nacl.cr.yp.to/box.html">NaCl's
+crypto_box_keypair(secret_key) function</a>, or compatible implementation,
+<a href="https://github.com/cubicbase/ecma-nacl">
+Ecma-NaCl's box.generate_pubkey(secret_key)</a><br>
+Enter public key in hex form without spaces:<br>
+<input name="pubkey" type="text" maxlength="64" style="width: 48em;"><br>
+Alternatively, the site's page/app may have a capability to derive secret key from
+some password, generate public key, and give it to server at this signin moment.
+Later on, client apps/pages would have to implement the same generation process, so
+as to have proper secret key, corresponding to the public key on file in server.<br>
+Enter passphrase with any characters you can type:<br>
+<input name="pass" type="password" style="width: 48em;"><br>
+Notice how server side of Public Key Login, and MailerId, does not distinguish between
+password-generated, and randomly generated keys.
+The former option allows for a simple style of password-based protection, while the later
+option allows for strong randomly generated keys, which are mostly used in high-level
+security departments.
+</p>
+
+<p>
+<button type="submit">Submit Info</button>
+</p>
+
+</form>
+
+</div>
+
+<div id="login-view" style="display: none;">
+
+<h2>Public Key Login display.</h2>
+
+<form id="login-form" onsubmit="loginUser(this); return false;">
+
+<p>
+Enter username:<br>
+<input name="username" type="text"><br>
+Enter a secret key, corresponding to public key on file at the server.
+Enter it in hex form without spaces:<br>
+<input name="seckey" type="password" maxlength="64" style="width: 48em;"><br>
+or enter passphrase:<br>
+<input name="pass" type="password" style="width: 48em;"><br>
+</p>
+
+<p>
+<button type="submit">Login</button>
+</p>
+
+</form>
+
+</div>
+
+<h3>Process Log (echoed to console)</h3>
+<div id="log" style="border-style: solid; border-width: thin; border-color: gray;
+height: 15em; overflow: auto;"></div>
+
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<!--
+ Copyright (C) 2015 3NSoft Inc.
+ 
+ This program is free software: you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation, either version 3 of the License, or (at your option) any later
+ version.
+ 
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ See the GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License along with
+ this program. If not, see <http://www.gnu.org/licenses/>.
+ -->
+<head>
+	<meta charset="UTF-8">
+	<title>ASMail test account setup</title>
+	<script type="text/javascript" src="./scripts/q.js"></script>
+	<script type="text/javascript" src="./scripts/ecma-nacl.js"></script>
+	<script type="text/javascript" src="./scripts/jsuri.js"></script>
+	<script type="text/javascript" src="./index.js"></script>
+</head>
+<body>
+
+	<h1>Configuring ASMail test account.</h1>
+
+	<div id="mid-login" style="display: none;">
+
+		<h2>Sign in</h2>
+
+		<p>
+			With ASMail protocol, any server, located at any domain may service
+			users with any address. For example, server <em>mail.provider.net</em>
+			may be set in DNS record of <em>perfect.com</em> as providing ASMail
+			service for all addresses <em>@perfect.com</em>. At the same time,
+			some <em>users@perfect.com</em> may tell some of their correspondents
+			to use server located at a totally different domain, <em>paranoidly.secure.net</em>.
+			In this later case, <em>users@perfect.com</em> would have to set
+			accounts for themselves at <em>paranoidly.secure.net</em>. This may
+			be done by signin with passwords, or using Public Key Login, both of
+			which require <em>users@perfect.com</em> to use yet another set of
+			passwords/keys. To mitigate this issue without compromising privacy,
+			login into <em>paranoidly.secure.net</em> can be done via MailerId
+			protocol, which, due to its non-tracking properties, will not leak to
+			identity provider for <em>perfect.com</em> that some of its users are
+			using <em>paranoidly.secure.net</em>.
+		</p>
+
+		<p>This ASMail test service is using MailerId process to sign in
+			for viewing and configuring accounts. Follow process steps in process
+			log below, and in a network activity inspector of your browser.</p>
+
+		<form onsubmit="signinWithMailerId(this); return false;">
+			Enter account address (e.g. bob@localhost):<br> <input
+				name="address" type="email" style="width: 20em;"><br>
+			Enter a passphrase:<br> <input name="pass" type="password"
+				style="width: 20em;"><br>
+			<button type="submit">Sign in</button>
+		</form>
+
+	</div>
+
+	<div id="login-success" style="display: none;">
+		<p>
+			Logged in as <span class="login-address"></span>. Check below the log
+			of steps that were done to accomplish this MailerId-based
+			authentication.
+		</p>
+		<p>
+			To subscribe to this test ASMail service, or to view settings of
+			existing account press button below:<br>
+			<button onclick="openAccount();">Open Account (new or
+				existing)</button>
+		</p>
+		<p>
+			If you wish to login with another email, then logout by pressing
+			button below:<br>
+			<button onclick="logout();">Logout</button>
+		</p>
+	</div>
+
+
+	<div id="account-settings" style="display: none;">
+
+		<h2>
+			Settings for <span class="login-address"></span>
+		</h2>
+
+		<pre id="info-on-file"></pre>
+
+		<button onclick="logout();">Logout</button>
+
+	</div>
+
+
+	<div id="logging">
+		<h3>Process Log (echoed to console)</h3>
+		<div id="log"
+			style="border-style: solid; border-width: thin; border-color: gray; height: 15em; overflow: auto;"></div>
+	</div>
+
+</body>
+</html>
