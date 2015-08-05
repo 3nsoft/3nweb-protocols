@@ -20,7 +20,8 @@ function makeFactory(rootFolder) {
     var sf = storeFactMod.makeFactory(rootFolder);
     function makeParamGetter(staticGetter) {
         return function (userId) {
-            return sf.getStore(userId).then(function (store) {
+            return sf.getStore(userId)
+                .then(function (store) {
                 if (!store) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -30,7 +31,8 @@ function makeFactory(rootFolder) {
     }
     function makeParamSetter(staticSetter) {
         return function (userId, param, setDefault) {
-            return sf.getStore(userId).then(function (store) {
+            return sf.getStore(userId)
+                .then(function (store) {
                 if (!store) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -44,7 +46,8 @@ function makeFactory(rootFolder) {
             if ((isRoot && objId) || (!isRoot && !objId)) {
                 throw new Error("Mixed object types' functions.");
             }
-            return sf.getStore(userId).then(function (store) {
+            return sf.getStore(userId)
+                .then(function (store) {
                 if (!store) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -63,7 +66,8 @@ function makeFactory(rootFolder) {
             if ((isRoot && objId) || (!isRoot && !objId)) {
                 throw new Error("Mixed object types' functions.");
             }
-            return sf.getStore(userId).then(function (store) {
+            return sf.getStore(userId)
+                .then(function (store) {
                 if (!store) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -73,7 +77,8 @@ function makeFactory(rootFolder) {
     }
     function makeTransactionCloser(cancel) {
         return function (userId, objId, transactionId) {
-            return sf.getStore(userId).then(function (store) {
+            return sf.getStore(userId)
+                .then(function (store) {
                 if (!store) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -83,7 +88,8 @@ function makeFactory(rootFolder) {
     }
     var factory = {
         add: function (userId, keyDerivParams) {
-            return sf.makeNewStoreFor(userId).then(function (store) {
+            return sf.makeNewStoreFor(userId)
+                .then(function (store) {
                 if (!store) {
                     return false;
                 }
@@ -91,15 +97,15 @@ function makeFactory(rootFolder) {
             });
         },
         exists: function (userId) {
-            return sf.getStore(userId).then(function (store) {
-                return !!store;
-            });
+            return sf.getStore(userId)
+                .then(function (store) { return !!store; });
         },
         getSpaceQuota: makeParamGetter(storeMod.Store.getSpaceQuota),
         getKeyDerivParams: makeParamGetter(storeMod.Store.getKeyDerivParams),
         setKeyDerivParams: makeParamSetter(storeMod.Store.setKeyDerivParams),
         startTransaction: function (userId, objId, trans) {
-            return sf.getStore(userId).then(function (store) {
+            return sf.getStore(userId)
+                .then(function (store) {
                 if (!store) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -108,14 +114,14 @@ function makeFactory(rootFolder) {
         },
         finalizeTransaction: makeTransactionCloser(false),
         cancelTransaction: makeTransactionCloser(true),
-        saveRootHeader: makeBlobSaver(0 /* Header */, true),
-        saveRootSegments: makeBlobSaver(1 /* Segments */, true),
-        saveObjHeader: makeBlobSaver(0 /* Header */, false),
-        saveObjSegments: makeBlobSaver(1 /* Segments */, false),
-        getRootHeader: makeBlobGetter(0 /* Header */, true),
-        getRootSegments: makeBlobGetter(1 /* Segments */, true),
-        getObjHeader: makeBlobGetter(0 /* Header */, false),
-        getObjSegments: makeBlobGetter(1 /* Segments */, false)
+        saveRootHeader: makeBlobSaver(storeMod.BytesPlace.Header, true),
+        saveRootSegments: makeBlobSaver(storeMod.BytesPlace.Segments, true),
+        saveObjHeader: makeBlobSaver(storeMod.BytesPlace.Header, false),
+        saveObjSegments: makeBlobSaver(storeMod.BytesPlace.Segments, false),
+        getRootHeader: makeBlobGetter(storeMod.BytesPlace.Header, true),
+        getRootSegments: makeBlobGetter(storeMod.BytesPlace.Segments, true),
+        getObjHeader: makeBlobGetter(storeMod.BytesPlace.Header, false),
+        getObjSegments: makeBlobGetter(storeMod.BytesPlace.Segments, false)
     };
     Object.freeze(factory);
     return factory;

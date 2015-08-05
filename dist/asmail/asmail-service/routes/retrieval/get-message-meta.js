@@ -22,9 +22,11 @@ function makeHandler(getMsgMetaFunc) {
     return function (req, res, next) {
         var userId = req.session.params.userId;
         var msgId = req.params.msgId;
-        getMsgMetaFunc(userId, msgId).then(function (meta) {
+        getMsgMetaFunc(userId, msgId)
+            .then(function (meta) {
             res.status(api.msgMetadata.SC.ok).json(meta);
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if ("string" !== typeof err) {
                 next(err);
             }
@@ -42,7 +44,8 @@ function makeHandler(getMsgMetaFunc) {
             else {
                 next(new Error("Unhandled storage error code: " + err));
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

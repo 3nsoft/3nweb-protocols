@@ -69,6 +69,12 @@ app.use(mid.makeApp(MAILERID_DATA_FOLDER));
 app.use(mail.makeApp(ASMAIL_DATA_FOLDER));
 app.use(store.makeApp(STORAGE_DATA_FOLDER));
 app.use(client.makeApp());
-Q.ninvoke(https.createServer(sslOpts, app), 'listen', 8080).then(function () {
-    console.log('\nOpen https://localhost:8080/ ' + '(use Firefox 39+, or Chromium 43+).' + '\nCertificate is self-signed.' + '\nAll services (MailerId, ASMail, 3NStorage) are served on' + '\nthe same port, but on different paths.');
-}).done();
+Q.ninvoke(https.createServer(sslOpts, app), 'listen', 8080)
+    .then(function () {
+    console.log('\nOpen https://localhost:8080/ ' +
+        '(use Firefox 39+, or Chromium 43+).' +
+        '\nCertificate is self-signed.' +
+        '\nAll services (MailerId, ASMail, 3NStorage) are served on' +
+        '\nthe same port, but on different paths.');
+})
+    .done();

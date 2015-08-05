@@ -52,6 +52,7 @@ function makeHandler(userCreatingFunc) {
             res.status(400).send("Missing user info fields.");
             return;
         }
+        // verify that public key json is ok
         try {
             throwupOnBadPKeyJSON(pkey);
         }

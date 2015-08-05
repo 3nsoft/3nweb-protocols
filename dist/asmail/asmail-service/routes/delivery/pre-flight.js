@@ -31,8 +31,10 @@ function makeHandler(allowedMsgSizeFunc, redirectFunc) {
     if ('function' !== typeof allowedMsgSizeFunc) {
         throw new TypeError("Given argument 'allowedMsgSizeFunc' must be function, but is not.");
     }
-    if (('undefined' !== typeof redirectFunc) && ('function' !== typeof redirectFunc)) {
-        throw new TypeError("Given argument 'redirectFunc' must either be function, " + "or be undefined, but it is neither.");
+    if (('undefined' !== typeof redirectFunc) &&
+        ('function' !== typeof redirectFunc)) {
+        throw new TypeError("Given argument 'redirectFunc' must either be function, " +
+            "or be undefined, but it is neither.");
     }
     return function (req, res, next) {
         var rb = req.body;
@@ -55,7 +57,8 @@ function makeHandler(allowedMsgSizeFunc, redirectFunc) {
             return;
         }
         function serveRequestHere() {
-            return allowedMsgSizeFunc(recipient, sender, invitation).then(function (msgSize) {
+            return allowedMsgSizeFunc(recipient, sender, invitation)
+                .then(function (msgSize) {
                 if ('undefined' === typeof msgSize) {
                     res.status(SC.unknownRecipient).json({
                         error: "Recipient " + recipient + " is unknown."
@@ -68,7 +71,8 @@ function makeHandler(allowedMsgSizeFunc, redirectFunc) {
                 }
                 else if (msgSize === 0) {
                     res.status(SC.senderNotAllowed).json({
-                        error: (!!sender ? sender : "Anonymous sender ") + " is not allowed to leave mail for " + recipient
+                        error: (!!sender ? sender : "Anonymous sender ") +
+                            " is not allowed to leave mail for " + recipient
                     });
                 }
                 else if (msgSize === -1) {
@@ -77,13 +81,15 @@ function makeHandler(allowedMsgSizeFunc, redirectFunc) {
                     });
                 }
                 else {
-                    throw new Error("Unrecognized code " + msgSize + " for message size limits.");
+                    throw new Error("Unrecognized code " + msgSize +
+                        " for message size limits.");
                 }
             });
         }
         var promise = null;
         if (redirectFunc) {
-            promise = redirectFunc(recipient).then(function (redirectTo) {
+            promise = redirectFunc(recipient)
+                .then(function (redirectTo) {
                 if (redirectTo) {
                     res.status(SC.redirect).json({
                         redirect: redirectTo
@@ -97,9 +103,11 @@ function makeHandler(allowedMsgSizeFunc, redirectFunc) {
         else {
             promise = serveRequestHere();
         }
-        promise.fail(function (err) {
+        promise
+            .fail(function (err) {
             next(err);
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

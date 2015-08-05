@@ -102,10 +102,12 @@ function addSecondaryBytesIntoCodePoint(codePoint, utf8Bytes, pos, numOfSecBytes
     for (var i = 0; i < numOfSecBytes; i += 1) {
         b = utf8Bytes[pos + i];
         if ('undefined' === typeof b) {
-            throw new Error("Encountered end of byte array in the middle of multi-byte " + "code point, at position " + (pos + 1));
+            throw new Error("Encountered end of byte array in the middle of multi-byte " +
+                "code point, at position " + (pos + 1));
         }
         if ((b & 192) !== 128) {
-            throw new Error("Encountered at position " + (pos + i) + " byte " + b.toString(2) + ", which should be a secondary utf8 byte like 10xxxxxx, but isn't.");
+            throw new Error("Encountered at position " + (pos + i) + " byte " + b.toString(2) +
+                ", which should be a secondary utf8 byte like 10xxxxxx, but isn't.");
         }
         codePoint <<= 6;
         codePoint += (b & 63);
@@ -140,7 +142,8 @@ function open(utf8Bytes) {
             byteCounter += 4;
         }
         else {
-            throw new Error("Encountered at position " + byteCounter + " byte " + b.toString(2) + ", which should not be present in a utf8 encoded block.");
+            throw new Error("Encountered at position " + byteCounter + " byte " + b.toString(2) +
+                ", which should not be present in a utf8 encoded block.");
         }
         ch = String.fromCharCode(codePoint);
         charArr[charCount] = ch;

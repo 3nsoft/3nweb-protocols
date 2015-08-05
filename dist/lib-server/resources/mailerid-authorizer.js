@@ -51,7 +51,8 @@ function getRootCertOfLocalhostTestMailerIdProvider() {
                     });
                 }
                 else {
-                    deferred.reject(new Error("Info file " + "localhost:8080/mailerid, is malformed."));
+                    deferred.reject(new Error("Info file " +
+                        "localhost:8080/mailerid, is malformed."));
                 }
             });
             res.on('error', function (err) {
@@ -59,7 +60,8 @@ function getRootCertOfLocalhostTestMailerIdProvider() {
             });
         }
         else {
-            deferred.reject(new Error("Cannot get localhost:8080/mailerid, returned " + "status code is " + res.statusCode));
+            deferred.reject(new Error("Cannot get localhost:8080/mailerid, returned " +
+                "status code is " + res.statusCode));
         }
     });
     req.end();
@@ -67,10 +69,12 @@ function getRootCertOfLocalhostTestMailerIdProvider() {
 }
 function validate(rpDomain, sessionId, assertion, userCert, provCert) {
     var validAt = Date.now() / 1000;
-    var promise = getRootCertOfLocalhostTestMailerIdProvider().then(function (root) {
+    var promise = getRootCertOfLocalhostTestMailerIdProvider()
+        .then(function (root) {
         try {
             var assertInfo = mid.relyingParty.verifyAssertion(assertion, { user: userCert, prov: provCert, root: root.cert }, root.address, validAt);
-            if ((assertInfo.relyingPartyDomain === rpDomain) && (assertInfo.sessionId === sessionId)) {
+            if ((assertInfo.relyingPartyDomain === rpDomain) &&
+                (assertInfo.sessionId === sessionId)) {
                 return assertInfo.user;
             }
             else {

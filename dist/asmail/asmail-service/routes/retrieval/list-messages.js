@@ -21,9 +21,11 @@ function makeHandler(listMsgIdsFunc) {
     }
     return function (req, res, next) {
         var userId = req.session.params.userId;
-        listMsgIdsFunc(userId).then(function (msgIds) {
+        listMsgIdsFunc(userId)
+            .then(function (msgIds) {
             res.status(200).json(msgIds);
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if ("string" !== typeof err) {
                 next(err);
             }
@@ -34,7 +36,8 @@ function makeHandler(listMsgIdsFunc) {
             else {
                 next(new Error("Unhandled storage error code: " + err));
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

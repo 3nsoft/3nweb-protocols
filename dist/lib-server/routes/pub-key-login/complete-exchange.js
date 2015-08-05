@@ -22,7 +22,8 @@ function makeHandler() {
         // bounce off already authorized session
         if (session.isAuthorized) {
             res.status(api.ERR_SC.duplicate).json({
-                error: "Repeated call: " + "this session has already been authorized."
+                error: "Repeated call: " +
+                    "this session has already been authorized."
             });
             return;
         }

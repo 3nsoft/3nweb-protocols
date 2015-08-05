@@ -22,9 +22,11 @@ function makeHandler(delMsgFunc) {
     return function (req, res, next) {
         var userId = req.session.params.userId;
         var msgId = req.params.msgId;
-        delMsgFunc(userId, msgId).then(function () {
+        delMsgFunc(userId, msgId)
+            .then(function () {
             res.status(api.rmMsg.SC.ok).end();
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if ("string" !== typeof err) {
                 next(err);
             }
@@ -38,7 +40,8 @@ function makeHandler(delMsgFunc) {
             else {
                 next(new Error("Unhandled storage error code: " + err));
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

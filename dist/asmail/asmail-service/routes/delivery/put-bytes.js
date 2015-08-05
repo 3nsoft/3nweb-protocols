@@ -88,9 +88,11 @@ function makeHandler(saveBytesFunc, chunkLimit) {
         }
         var objId = req.params.objId;
         var qOpts = req.query;
-        var total = ('string' === typeof qOpts.total) ? parseInt(qOpts.total) : null;
+        var total = ('string' === typeof qOpts.total) ?
+            parseInt(qOpts.total) : null;
         var append = (qOpts.append === 'true');
-        var offset = ('string' === typeof qOpts.ofs) ? parseInt(qOpts.ofs) : null;
+        var offset = ('string' === typeof qOpts.ofs) ?
+            parseInt(qOpts.ofs) : null;
         // get and check Content-Length
         var chunkLen = getContentLen(req, res, maxChunkSize);
         if ('number' !== typeof chunkLen) {
@@ -110,16 +112,19 @@ function makeHandler(saveBytesFunc, chunkLimit) {
             opts.totalSize = total;
         }
         var extraSpaceUsed = (opts.appendMode || opts.isFirstReq);
-        if (extraSpaceUsed && (opts.chunkLen > session.params.maxMsgLength - session.params.currentMsgLength)) {
+        if (extraSpaceUsed && (opts.chunkLen >
+            session.params.maxMsgLength - session.params.currentMsgLength)) {
             res.status(api.ERR_SC.contentTooLong).send("This request goes over the message limit.");
             return;
         }
         if (extraSpaceUsed) {
             session.params.currentMsgLength += opts.chunkLen;
         }
-        saveBytesFunc(recipient, req, opts).then(function () {
+        saveBytesFunc(recipient, req, opts)
+            .then(function () {
             res.status(SC.ok).end();
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if (extraSpaceUsed) {
                 session.params.currentMsgLength -= opts.chunkLen;
             }
@@ -146,7 +151,8 @@ function makeHandler(saveBytesFunc, chunkLimit) {
             else {
                 next(new Error("Unhandled storage error code: " + err));
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

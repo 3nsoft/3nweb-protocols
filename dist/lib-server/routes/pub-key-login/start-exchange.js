@@ -65,7 +65,8 @@ function makeHandler(findUserParamsAndKeyFunc, sessionGenFunc, computeDHSharedKe
         // bounce off existing and already authorized session
         if (session && session.isAuthorized) {
             res.status(api.ERR_SC.duplicate).json({
-                error: "Repeated call: " + "this session has already been authorized."
+                error: "Repeated call: " +
+                    "this session has already been authorized."
             });
             return;
         }
@@ -75,12 +76,14 @@ function makeHandler(findUserParamsAndKeyFunc, sessionGenFunc, computeDHSharedKe
                 return session;
             }
             else {
-                return sessionGenFunc().then(function (s) {
+                return sessionGenFunc()
+                    .then(function (s) {
                     session = s;
                     session.params.userId = userId;
                 });
             }
-        }).then(function () {
+        })
+            .then(function () {
             // get random bytes for session key and nonce
             var nonce = random.bytes(NONCE_LENGTH);
             var sessionKey = random.bytes(KEY_LENGTH);
@@ -110,9 +113,11 @@ function makeHandler(findUserParamsAndKeyFunc, sessionGenFunc, computeDHSharedKe
                 serverPubKey: base64.pack(serverPubKey),
                 keyDerivParams: userParamsAndKey.params
             });
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             next(err);
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

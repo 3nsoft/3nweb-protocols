@@ -44,6 +44,7 @@ import confUtil = require('../../lib-server/conf-util');
 import deliveryApi = require('../../lib-common/service-api/asmail/delivery');
 import configApi = require('../../lib-common/service-api/asmail/config');
 import retrievalApi = require('../../lib-common/service-api/asmail/retrieval');
+import os = require('os');
 
 interface AnonSenderPolicy extends configApi.p.anonSenderPolicy.Policy {}
 interface AuthSenderPolicy extends configApi.p.authSenderPolicy.Policy {}
@@ -123,6 +124,12 @@ export class Inbox {
 	 * @return a promise, resolvable to number bytes used by this inbox.
 	 */
 	usedSpace(): Q.Promise<number> {
+		// XXX hack due to missing du in windows
+		if (os.type().match('Windows')) {
+			console.warn("\nOn Windows meaningful check of space, "+
+				"occupied by user is skipped, for now");
+			return Q.when(0);
+		}
 		var promise = Q.nfcall<string>(exec, "du -k -s "+this.path)
 		.then((stdOut) => {
 			var kUsed = parseInt(stdOut);

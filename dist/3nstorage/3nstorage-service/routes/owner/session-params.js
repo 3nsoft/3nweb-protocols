@@ -23,12 +23,14 @@ function makeHandler(keyDerivParamsFunc, maxChunk) {
     var maxChunkSize = confUtil.stringToNumOfBytes(maxChunk);
     return function (req, res, next) {
         var userId = req.session.params.userId;
-        keyDerivParamsFunc(userId).then(function (kdParams) {
+        keyDerivParamsFunc(userId)
+            .then(function (kdParams) {
             res.status(200).json({
                 keyDerivParams: kdParams,
                 maxChunkSize: maxChunkSize
             });
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if ("string" !== typeof err) {
                 next(err);
             }
@@ -39,7 +41,8 @@ function makeHandler(keyDerivParamsFunc, maxChunk) {
             else {
                 next(new Error("Unhandled storage error code: " + err));
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

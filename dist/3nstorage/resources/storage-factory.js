@@ -28,9 +28,11 @@ var fops = require('../../lib-server/resources/file_ops');
  */
 function createStoreFolder(rootFolder) {
     var storeFolderPath = rootFolder + "/" + random.stringOfB64UrlSafeChars(20);
-    var promise = Q.nfcall(fs.mkdir, storeFolderPath).then(function () {
+    var promise = Q.nfcall(fs.mkdir, storeFolderPath)
+        .then(function () {
         return storeFolderPath;
-    }).fail(function (err) {
+    })
+        .fail(function (err) {
         if (err.code === fErrMod.Code.fileExists) {
             return createStoreFolder(rootFolder);
         }
@@ -53,7 +55,9 @@ function pickupExistingStorages(rootFolder) {
             userId = fs.readFileSync(path + '/info/userid', { encoding: 'utf8' });
         }
         catch (err) {
-            console.error("Folder " + fName + " cannot be seen as a store " + "in the root folder " + rootFolder + "\ndue to the following\n" + err.stack);
+            console.error("Folder " + fName + " cannot be seen as a store " +
+                "in the root folder " + rootFolder +
+                "\ndue to the following\n" + err.stack);
             return;
         }
         userStorePaths[userId] = path;
@@ -70,10 +74,12 @@ function makeFactory(rootFolder, writeBufferSize, readBufferSize) {
             if ('undefined' !== typeof userStorePaths[userId]) {
                 return Q.when();
             }
-            var promise = createStoreFolder(rootFolder).then(function (path) {
+            var promise = createStoreFolder(rootFolder)
+                .then(function (path) {
                 var store = new storeMod.Store(userId, path, writeBufferSize, readBufferSize);
                 userStorePaths[store.userId] = store.path;
-                return storeMod.Store.initStore(store).then(function () {
+                return storeMod.Store.initStore(store)
+                    .then(function () {
                     return store;
                 });
             });

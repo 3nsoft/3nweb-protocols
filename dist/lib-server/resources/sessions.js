@@ -35,9 +35,11 @@ var SessionFactory = (function () {
     }
     SessionFactory.prototype.generate = function () {
         var _this = this;
-        return this.idGenerator().then(function (newId) {
+        return this.idGenerator()
+            .then(function (newId) {
             var s = makeSession(newId, _this);
-            var promise = _this.sessions.add(s).then(function () {
+            var promise = _this.sessions.add(s)
+                .then(function () {
                 return s;
             });
             return promise;
@@ -70,7 +72,8 @@ var SessionFactory = (function () {
                 return;
             }
             // get promise with session, and attach action to its resolution
-            _this.sessions.get(sessionId).then(function (session) {
+            _this.sessions.get(sessionId)
+                .then(function (session) {
                 if (('object' === typeof session) && (null !== session)) {
                     req.session = session;
                     session.lastAccessedAt = Date.now();
@@ -79,7 +82,8 @@ var SessionFactory = (function () {
                     if (!req.session) {
                         res.status(401).send("Required to start new session.");
                     }
-                    else if (sessionMustBeAuthorized && !req.session.isAuthorized) {
+                    else if (sessionMustBeAuthorized &&
+                        !req.session.isAuthorized) {
                         res.status(401).send("Required to complete authorization step.");
                     }
                     else {
@@ -89,7 +93,8 @@ var SessionFactory = (function () {
                 else {
                     next();
                 }
-            }).done();
+            })
+                .done();
         };
     };
     SessionFactory.prototype.ensureAuthorizedSession = function () {

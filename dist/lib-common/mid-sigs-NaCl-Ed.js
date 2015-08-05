@@ -208,7 +208,8 @@ var relyingParty;
             if (!issuerPKey) {
                 throw new Error("Missing issuer key.");
             }
-            if ((cert.issuer !== issuer) || (signedCert.kid !== issuerPKey.kid)) {
+            if ((cert.issuer !== issuer) ||
+                (signedCert.kid !== issuerPKey.kid)) {
                 throw new Error(use + " certificate is not signed by issuer key.");
             }
         }
@@ -328,7 +329,10 @@ var relyingParty;
 Object.freeze(relyingParty);
 function correlateSKeyWithItsCert(skey, cert) {
     var pkey = jwk.keyFromJson(cert.cert.publicKey, skey.use, nacl.signing.JWK_ALG_NAME, nacl.signing.PUBLIC_KEY_LENGTH);
-    if (!((pkey.kid === skey.kid) && (pkey.use === skey.use) && (pkey.alg === skey.alg) && nacl.compareVectors(nacl.signing.extract_pkey(skey.k), pkey.k))) {
+    if (!((pkey.kid === skey.kid) &&
+        (pkey.use === skey.use) &&
+        (pkey.alg === skey.alg) &&
+        nacl.compareVectors(nacl.signing.extract_pkey(skey.k), pkey.k))) {
         throw new Error("Key does not correspond to certificate.");
     }
 }
@@ -357,8 +361,10 @@ var user;
             throw new Error("Given key " + signKey.kid + " has incorrect use: " + signKey.use);
         }
         correlateSKeyWithItsCert(signKey, certificate);
-        if (('number' !== typeof validityPeriod) || (validityPeriod < 1) || (validityPeriod > user.MAX_SIG_VALIDITY)) {
-            throw new Error("Given assertion validity is illegal: " + validityPeriod);
+        if (('number' !== typeof validityPeriod) || (validityPeriod < 1) ||
+            (validityPeriod > user.MAX_SIG_VALIDITY)) {
+            throw new Error("Given assertion validity is illegal: " +
+                validityPeriod);
         }
         if (!arrFactory) {
             arrFactory = nacl.arrays.makeFactory();

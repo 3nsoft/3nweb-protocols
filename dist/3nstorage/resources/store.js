@@ -59,6 +59,7 @@ var fErrMod = require('../../lib-common/file-err');
 var nacl = require('ecma-nacl');
 var xsp = nacl.fileXSP;
 var confUtil = require('../../lib-server/conf-util');
+var os = require('os');
 exports.SC = {
     USER_UNKNOWN: 'user-unknown',
     OBJ_EXIST: 'obj-already-exist',
@@ -83,9 +84,9 @@ Object.freeze(SPECIAL_VERSION);
 var BytesPlace = exports.BytesPlace;
 Object.freeze(BytesPlace);
 var FNAME_END = [];
-FNAME_END[0 /* Header */] = '.hxsp';
-FNAME_END[1 /* Segments */] = '.sxsp';
-FNAME_END[2 /* Diff */] = '.sxsp.diff';
+FNAME_END[BytesPlace.Header] = '.hxsp';
+FNAME_END[BytesPlace.Segments] = '.sxsp';
+FNAME_END[BytesPlace.Diff] = '.sxsp.diff';
 Object.freeze(FNAME_END);
 var DEFAULT_FILE_WRITE_BUFFER_SIZE = 4 * 1024;
 var DEFAULT_FILE_READ_BUFFER_SIZE = 64 * 1024;
@@ -96,7 +97,8 @@ var DEFAULT_FILE_READ_BUFFER_SIZE = 64 * 1024;
  * named file.
  */
 function writeJSONFile(json, path) {
-    return Q.nfcall(fs.writeFile, path, JSON.stringify(json), { encoding: 'utf8', flag: 'w' }).then(function () {
+    return Q.nfcall(fs.writeFile, path, JSON.stringify(json), { encoding: 'utf8', flag: 'w' })
+        .then(function () {
         return true;
     });
 }
@@ -105,7 +107,8 @@ function writeJSONFile(json, path) {
  * @return a promise, resolvable to json object, read from the named file.
  */
 function readJSONFile(path) {
-    var promise = Q.nfcall(fs.readFile, path).then(function (buf) {
+    var promise = Q.nfcall(fs.readFile, path)
+        .then(function (buf) {
         return JSON.parse(buf.toString('utf8'));
     });
     return promise;
@@ -130,10 +133,18 @@ var SpaceTracker = (function () {
     SpaceTracker.prototype.diskUsed = function (path, runNum) {
         var _this = this;
         if (runNum === void 0) { runNum = 0; }
-        return Q.nfcall(exec, "du -k -s " + path).then(function (stdOut) {
+        // XXX hack due to missing du in windows
+        if (os.type().match('Windows')) {
+            console.warn("\nOn Windows meaningful check of space, " +
+                "occupied by user is skipped, for now");
+            return Q.when(0);
+        }
+        return Q.nfcall(exec, "du -k -s " + path)
+            .then(function (stdOut) {
             var kUsed = parseInt(stdOut);
             if (isNaN(kUsed)) {
-                throw new Error("Shell utility du outputs a string, " + "which cannot be parsed as an integer.");
+                throw new Error("Shell utility du outputs a string, " +
+                    "which cannot be parsed as an integer.");
             }
             return kUsed * 1024;
         }, function (err) {
@@ -141,7 +152,9 @@ var SpaceTracker = (function () {
                 return _this.diskUsed(path, runNum + 1);
             }
             else {
-                console.warn("\n3NStorage service (" + Date() + "):\n" + "\twas not capable to properly estimate disk usage of " + path + "\n");
+                console.warn("\n3NStorage service (" + Date() + "):\n" +
+                    "\twas not capable to properly estimate disk usage of " +
+                    path + "\n");
                 return Q.when(0);
             }
         });
@@ -152,10 +165,12 @@ var SpaceTracker = (function () {
      */
     SpaceTracker.prototype.updateSpaceInfo = function (store) {
         var usedSpace = 0;
-        var promise = this.diskUsed(store.path).then(function (bUsed) {
+        var promise = this.diskUsed(store.path)
+            .then(function (bUsed) {
             usedSpace = bUsed;
             return store.getSpaceQuota();
-        }).then(function (quota) {
+        })
+            .then(function (quota) {
             return {
                 free: Math.max(0, quota - usedSpace),
                 used: usedSpace
@@ -176,7 +191,8 @@ var SpaceTracker = (function () {
             changeS();
         }
         else {
-            return this.updateSpaceInfo(store).then(function (spaceInfo) {
+            return this.updateSpaceInfo(store)
+                .then(function (spaceInfo) {
                 s = spaceInfo;
                 changeS();
             });
@@ -194,8 +210,12 @@ var Store = (function () {
     function Store(userId, storePath, writeBufferSize, readBufferSize) {
         this.userId = userId;
         this.path = storePath;
-        this.fileWritingBufferSize = (writeBufferSize ? confUtil.stringToNumOfBytes(writeBufferSize) : DEFAULT_FILE_WRITE_BUFFER_SIZE);
-        this.fileReadingBufferSize = (readBufferSize ? confUtil.stringToNumOfBytes(readBufferSize) : DEFAULT_FILE_READ_BUFFER_SIZE);
+        this.fileWritingBufferSize = (writeBufferSize ?
+            confUtil.stringToNumOfBytes(writeBufferSize) :
+            DEFAULT_FILE_WRITE_BUFFER_SIZE);
+        this.fileReadingBufferSize = (readBufferSize ?
+            confUtil.stringToNumOfBytes(readBufferSize) :
+            DEFAULT_FILE_READ_BUFFER_SIZE);
         Object.freeze(this);
     }
     /**
@@ -206,9 +226,14 @@ var Store = (function () {
      * constructed.
      */
     Store.initStore = function (store) {
-        var promise = Q.all([Q.nfcall(fs.mkdir, store.path + '/objects'), Q.nfcall(fs.mkdir, store.path + '/transactions'), Q.nfcall(fs.mkdir, store.path + '/root'), Q.nfcall(fs.mkdir, store.path + '/info')]).then(function () {
+        var promise = Q.all([Q.nfcall(fs.mkdir, store.path + '/objects'),
+            Q.nfcall(fs.mkdir, store.path + '/transactions'),
+            Q.nfcall(fs.mkdir, store.path + '/root'),
+            Q.nfcall(fs.mkdir, store.path + '/info')])
+            .then(function () {
             return Q.nfcall(fs.writeFile, store.path + '/info/userid', store.userId, { encoding: 'utf8', flag: 'wx' });
-        }).then(function () {
+        })
+            .then(function () {
             return setDefaultParameters(store);
         });
         return promise;
@@ -223,7 +248,8 @@ var Store = (function () {
      */
     Store.prototype.getObjVersion = function (objId) {
         var filePath = this.objFolder(objId) + '/current.v';
-        var promise = Q.nfcall(fs.readFile, filePath).then(function (buf) {
+        var promise = Q.nfcall(fs.readFile, filePath)
+            .then(function (buf) {
             var str = buf.toString('utf8');
             var v = parseInt(str);
             if (isNaN(v)) {
@@ -232,7 +258,8 @@ var Store = (function () {
             else {
                 return v;
             }
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if (err.code === fErrMod.Code.noFile) {
                 throw exports.SC.OBJ_UNKNOWN;
             }
@@ -258,24 +285,28 @@ var Store = (function () {
         if (!objId) {
             throw new Error("Missing object id.");
         }
-        var promise = Q.nfcall(fs.mkdir, this.objFolder(objId)).fail(function (err) {
+        var promise = Q.nfcall(fs.mkdir, this.objFolder(objId))
+            .fail(function (err) {
             if (err.code === fErrMod.Code.fileExists) {
                 throw exports.SC.OBJ_EXIST;
             }
             throw err;
-        }).then(function () {
+        })
+            .then(function () {
             return _this.setObjVersion(objId, SPECIAL_VERSION.NEW);
         });
         return promise;
     };
     Store.prototype.transactionFolder = function (objId) {
-        return (objId ? this.path + '/transactions/' + objId : this.path + '/root/transaction');
+        return (objId ?
+            this.path + '/transactions/' + objId : this.path + '/root/transaction');
     };
     Store.prototype.saveTransactionParams = function (objId, transaction) {
         return Q.nfcall(fs.writeFile, this.transactionFolder(objId) + '/transaction', JSON.stringify(transaction), { encoding: 'utf8', flag: 'w' });
     };
     Store.prototype.getTransactionParams = function (objId) {
-        var promise = readJSONFile(this.transactionFolder(objId) + '/transaction').fail(function (err) {
+        var promise = readJSONFile(this.transactionFolder(objId) + '/transaction')
+            .fail(function (err) {
             if (err.code === fErrMod.Code.noFile) {
                 throw exports.SC.TRANSACTION_UNKNOWN;
             }
@@ -284,7 +315,10 @@ var Store = (function () {
         return promise;
     };
     Store.prototype.allocateHeaderAndSegsFiles = function (objId, version, headerSize, segsSize) {
-        return [fops.createEmptyFile(this.transactionFolder(objId) + '/new' + FNAME_END[0 /* Header */], headerSize), fops.createEmptyFile(this.transactionFolder(objId) + '/new' + FNAME_END[1 /* Segments */], segsSize)];
+        return [fops.createEmptyFile(this.transactionFolder(objId) +
+                '/new' + FNAME_END[BytesPlace.Header], headerSize),
+            fops.createEmptyFile(this.transactionFolder(objId) +
+                '/new' + FNAME_END[BytesPlace.Segments], segsSize)];
     };
     Store.prototype.startTransaction = function (objId, reqTrans) {
         var _this = this;
@@ -296,12 +330,14 @@ var Store = (function () {
             isNewObj: !!reqTrans.isNewObj,
             sizes: reqTrans.sizes
         };
-        var promise = Q.nfcall(fs.mkdir, this.transactionFolder(objId)).fail(function (err) {
+        var promise = Q.nfcall(fs.mkdir, this.transactionFolder(objId))
+            .fail(function (err) {
             if (err.code === fErrMod.Code.fileExists) {
                 throw exports.SC.CONCURRENT_TRANSACTION;
             }
             throw err;
-        }).then(function () {
+        })
+            .then(function () {
             var tasks = [];
             if (trans.isNewObj) {
                 trans.version = 1;
@@ -311,7 +347,8 @@ var Store = (function () {
             }
             else {
                 // get current version, and set new one to be v+1
-                tasks.push(_this.getObjVersion(objId).then(function (currentVersion) {
+                tasks.push(_this.getObjVersion(objId)
+                    .then(function (currentVersion) {
                     if ('number' !== typeof currentVersion) {
                         throw exports.SC.WRONG_OBJ_STATE;
                     }
@@ -320,8 +357,10 @@ var Store = (function () {
             }
             if (trans.isNewObj || !trans.diff) {
                 // create empty files of appropriate size, if space allows
-                var headerSize = ((trans.sizes.header > 0) ? trans.sizes.header : 0);
-                var segsSize = ((trans.sizes.segments > 0) ? trans.sizes.segments : 0);
+                var headerSize = ((trans.sizes.header > 0) ?
+                    trans.sizes.header : 0);
+                var segsSize = ((trans.sizes.segments > 0) ?
+                    trans.sizes.segments : 0);
                 var t = spaceTracker.change(_this, headerSize + segsSize);
                 if (t) {
                     tasks.push(t.then(function () {
@@ -333,17 +372,22 @@ var Store = (function () {
                 }
             }
             else {
+                // save diff info, create header and segs-diff files
+                // according to diff info
+                // TODO diffs need implementation
                 throw new Error("Processing diffs is not implemented, yet.");
             }
             return Q.all(tasks);
-        }).then(function () {
+        })
+            .then(function () {
             return _this.saveTransactionParams(objId, trans);
-        }).fail(function (err) {
-            return _this.completeTransaction(objId, trans.transactionId, true).fail(function (err2) {
-            }).then(function () {
-                throw err;
-            });
-        }).then(function () {
+        })
+            .fail(function (err) {
+            return _this.completeTransaction(objId, trans.transactionId, true)
+                .fail(function (err2) { }) // swallow errors here
+                .then(function () { throw err; });
+        })
+            .then(function () {
             return trans.transactionId;
         });
         return promise;
@@ -352,26 +396,33 @@ var Store = (function () {
         var _this = this;
         // move header and segments files from transaction folder to
         // obj's one, setting proper current version
-        var promise = Q.all([Q.nfcall(fs.rename, transFolder + '/new' + FNAME_END[0 /* Header */], objFolder + '/' + trans.version + FNAME_END[0 /* Header */]), Q.nfcall(fs.rename, transFolder + '/new' + FNAME_END[1 /* Segments */], objFolder + '/' + trans.version + FNAME_END[1 /* Segments */])]).then(function () {
+        var promise = Q.all([Q.nfcall(fs.rename, transFolder + '/new' + FNAME_END[BytesPlace.Header], objFolder + '/' + trans.version + FNAME_END[BytesPlace.Header]),
+            Q.nfcall(fs.rename, transFolder + '/new' + FNAME_END[BytesPlace.Segments], objFolder + '/' + trans.version + FNAME_END[BytesPlace.Segments])])
+            .then(function () {
             return _this.setObjVersion(objId, trans.version);
         });
         return promise;
     };
     Store.prototype.applyDiffTransactionFiles = function (transFolder, objFolder, trans, objId) {
+        // create new header and segments files, applying diff;
+        // make reverse diff and save it instead of previous segments
+        // and header
+        // TODO diffs need implementation
         throw new Error("Processing diffs is not implemented, yet.");
     };
     Store.prototype.completeTransaction = function (objId, transactionId, cancel) {
         var _this = this;
         var transFolder = this.transactionFolder(objId);
         var objFolder = this.objFolder(objId);
-        var promise = this.getTransactionParams(objId).then(function (trans) {
+        var promise = this.getTransactionParams(objId)
+            .then(function (trans) {
             if (trans.transactionId !== transactionId) {
                 throw exports.SC.TRANSACTION_UNKNOWN;
             }
             if (cancel) {
                 if (trans.isNewObj && (objId !== null)) {
-                    return fops.rmdir(objFolder).fail(function (err) {
-                    }); // swallow errors here
+                    return fops.rmdir(objFolder)
+                        .fail(function (err) { }); // swallow errors here
                 }
             }
             else if (trans.diff) {
@@ -380,22 +431,24 @@ var Store = (function () {
             else {
                 return _this.applyNonDiffTransactionFiles(transFolder, objFolder, trans, objId);
             }
-        }).then(function () {
-            return fops.rmdir(transFolder).fail(function (err) {
-            }); // swallow errors here
+        })
+            .then(function () {
+            return fops.rmdir(transFolder)
+                .fail(function (err) { }); // swallow errors here
         });
         return promise;
     };
     Store.prototype.appendObj = function (objId, transactionId, ftype, bytes, bytesLen) {
         var _this = this;
         var filePath = null;
-        var promise = this.getTransactionParams(objId).then(function (trans) {
+        var promise = this.getTransactionParams(objId)
+            .then(function (trans) {
             if (trans.transactionId !== transactionId) {
                 throw exports.SC.TRANSACTION_UNKNOWN;
             }
             filePath = _this.transactionFolder(objId) + '/new' + FNAME_END[ftype];
             if (trans.sizes) {
-                if (ftype === 1 /* Segments */) {
+                if (ftype === BytesPlace.Segments) {
                     if (trans.sizes.segments < 0) {
                         return fops.getFileSize(filePath);
                     }
@@ -403,7 +456,7 @@ var Store = (function () {
                         throw exports.SC.INCOMPATIBLE_TRANSACTION;
                     }
                 }
-                else if (ftype === 0 /* Header */) {
+                else if (ftype === BytesPlace.Header) {
                     if (trans.sizes.header < 0) {
                         return fops.getFileSize(filePath);
                     }
@@ -411,7 +464,7 @@ var Store = (function () {
                         throw exports.SC.INCOMPATIBLE_TRANSACTION;
                     }
                 }
-                else if (ftype === 2 /* Diff */) {
+                else if (ftype === BytesPlace.Diff) {
                     throw exports.SC.INCOMPATIBLE_TRANSACTION;
                 }
                 else {
@@ -419,10 +472,12 @@ var Store = (function () {
                 }
             }
             else if (trans.diff) {
-                if (ftype === 2 /* Diff */) {
+                if (ftype === BytesPlace.Diff) {
+                    // TODO diffs need implementation
                     throw new Error("Processing diffs is not implemented, yet.");
                 }
-                else if ((ftype === 0 /* Header */) || (ftype === 1 /* Segments */)) {
+                else if ((ftype === BytesPlace.Header) ||
+                    (ftype === BytesPlace.Segments)) {
                     throw exports.SC.INCOMPATIBLE_TRANSACTION;
                 }
                 else {
@@ -432,14 +487,14 @@ var Store = (function () {
             else {
                 throw new Error("Illegal transaction: no file sizes, no diff.");
             }
-        }).then(function (initFileSize) {
-            return spaceTracker.change(_this, bytesLen).then(function () {
-                return fops.streamToExistingFile(filePath, initFileSize, bytesLen, bytes, _this.fileWritingBufferSize).fail(function (err) {
-                    return Q.nfcall(fs.truncate, filePath, initFileSize).then(function () {
-                        throw err;
-                    }, function () {
-                        throw err;
-                    });
+        })
+            .then(function (initFileSize) {
+            return spaceTracker.change(_this, bytesLen)
+                .then(function () {
+                return fops.streamToExistingFile(filePath, initFileSize, bytesLen, bytes, _this.fileWritingBufferSize)
+                    .fail(function (err) {
+                    return Q.nfcall(fs.truncate, filePath, initFileSize)
+                        .then(function () { throw err; }, function () { throw err; });
                 });
             });
         });
@@ -448,13 +503,14 @@ var Store = (function () {
     Store.prototype.saveObjChunk = function (objId, transactionId, ftype, offset, chunkLen, chunk) {
         var _this = this;
         var filePath = null;
-        var promise = this.getTransactionParams(objId).then(function (trans) {
+        var promise = this.getTransactionParams(objId)
+            .then(function (trans) {
             if (trans.transactionId !== transactionId) {
                 throw exports.SC.TRANSACTION_UNKNOWN;
             }
             filePath = _this.transactionFolder(objId) + '/new' + FNAME_END[ftype];
             if (trans.sizes) {
-                if (ftype === 1 /* Segments */) {
+                if (ftype === BytesPlace.Segments) {
                     if (trans.sizes.segments < 0) {
                         throw exports.SC.INCOMPATIBLE_TRANSACTION;
                     }
@@ -465,7 +521,7 @@ var Store = (function () {
                         return trans.sizes.segments;
                     }
                 }
-                else if (ftype === 0 /* Header */) {
+                else if (ftype === BytesPlace.Header) {
                     if (trans.sizes.header < 0) {
                         throw exports.SC.INCOMPATIBLE_TRANSACTION;
                     }
@@ -476,7 +532,7 @@ var Store = (function () {
                         return trans.sizes.header;
                     }
                 }
-                else if (ftype === 2 /* Diff */) {
+                else if (ftype === BytesPlace.Diff) {
                     throw exports.SC.INCOMPATIBLE_TRANSACTION;
                 }
                 else {
@@ -484,10 +540,12 @@ var Store = (function () {
                 }
             }
             else if (trans.diff) {
-                if (ftype === 2 /* Diff */) {
+                if (ftype === BytesPlace.Diff) {
+                    // TODO diffs need implementation
                     throw new Error("Processing diffs is not implemented, yet.");
                 }
-                else if ((ftype === 0 /* Header */) || (ftype === 1 /* Segments */)) {
+                else if ((ftype === BytesPlace.Header) ||
+                    (ftype === BytesPlace.Segments)) {
                     throw exports.SC.INCOMPATIBLE_TRANSACTION;
                 }
                 else {
@@ -497,7 +555,8 @@ var Store = (function () {
             else {
                 throw new Error("Illegal transaction: no file sizes, no diff.");
             }
-        }).then(function () {
+        })
+            .then(function () {
             return fops.streamToExistingFile(filePath, offset, chunkLen, chunk, _this.fileWritingBufferSize);
         });
         return promise;
@@ -517,7 +576,8 @@ var Store = (function () {
         var filePath;
         var promise;
         if (version === null) {
-            promise = this.getObjVersion(objId).then(function (v) {
+            promise = this.getObjVersion(objId)
+                .then(function (v) {
                 if ('number' !== typeof v) {
                     throw exports.SC.WRONG_OBJ_STATE;
                 }
@@ -530,7 +590,8 @@ var Store = (function () {
             filePath = this.objFolder(objId) + '/' + version + FNAME_END[ftype];
             promise = fops.getFileSize(filePath);
         }
-        promise = promise.then(function (objSize) {
+        promise = promise
+            .then(function (objSize) {
             if (objSize <= offset) {
                 return;
             }

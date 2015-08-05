@@ -29,8 +29,10 @@ function makeHandler(userExistsFunc, sessionGenFunc, redirectFunc) {
     if ('function' !== typeof sessionGenFunc) {
         throw new TypeError("Given argument 'sessionGenFunc' must be function, but is not.");
     }
-    if (('undefined' !== typeof redirectFunc) && ('function' !== typeof redirectFunc)) {
-        throw new TypeError("Given argument 'redirectFunc' must either be function, " + "or be undefined, but it is neither.");
+    if (('undefined' !== typeof redirectFunc) &&
+        ('function' !== typeof redirectFunc)) {
+        throw new TypeError("Given argument 'redirectFunc' must either be function, " +
+            "or be undefined, but it is neither.");
     }
     return function (req, res, next) {
         var session = req.session;
@@ -50,9 +52,11 @@ function makeHandler(userExistsFunc, sessionGenFunc, redirectFunc) {
             return;
         }
         function serveRequestHere() {
-            return userExistsFunc(userId).then(function (userExists) {
+            return userExistsFunc(userId)
+                .then(function (userExists) {
                 if (userExists) {
-                    return sessionGenFunc().then(function (session) {
+                    return sessionGenFunc()
+                        .then(function (session) {
                         session.params.userId = userId;
                         res.status(SC.ok).json({
                             sessionId: session.id,
@@ -68,7 +72,8 @@ function makeHandler(userExistsFunc, sessionGenFunc, redirectFunc) {
         }
         var promise = null;
         if (redirectFunc) {
-            promise = redirectFunc(userId).then(function (redirectTo) {
+            promise = redirectFunc(userId)
+                .then(function (redirectTo) {
                 if (redirectTo) {
                     res.status(SC.redirect).json({
                         redirect: redirectTo
@@ -82,9 +87,11 @@ function makeHandler(userExistsFunc, sessionGenFunc, redirectFunc) {
         else {
             promise = serveRequestHere();
         }
-        promise.fail(function (err) {
+        promise
+            .fail(function (err) {
             next(err);
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

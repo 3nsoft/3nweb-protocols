@@ -23,14 +23,16 @@ function makeHandler(paramSetter) {
         var session = req.session;
         var userId = session.params.userId;
         var pValue = req.body;
-        paramSetter(userId, pValue).then(function (valChanged) {
+        paramSetter(userId, pValue)
+            .then(function (valChanged) {
             if (valChanged) {
                 res.status(api.PARAM_SC.ok).end();
             }
             else {
                 res.status(api.PARAM_SC.malformed).send('Malformed parameter value.');
             }
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if ("string" !== typeof err) {
                 next(err);
             }
@@ -38,7 +40,8 @@ function makeHandler(paramSetter) {
                 res.status(api.ERR_SC.server).send("Recipient disappeared from the system.");
                 session.close();
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

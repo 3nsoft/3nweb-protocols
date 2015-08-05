@@ -76,7 +76,8 @@ function makeHandler(root, saveBytesFunc, chunkLimit) {
         var qOpts = req.query;
         var transactionId = qOpts.trans;
         var append = (qOpts.append === 'true');
-        var offset = ('string' === typeof qOpts.ofs) ? parseInt(qOpts.ofs) : null;
+        var offset = ('string' === typeof qOpts.ofs) ?
+            parseInt(qOpts.ofs) : null;
         // get and check Content-Length
         var chunkLen = getContentLen(req, res, maxChunkSize);
         if ('number' !== typeof chunkLen) {
@@ -91,9 +92,11 @@ function makeHandler(root, saveBytesFunc, chunkLimit) {
             transactionId: transactionId,
             chunkLen: chunkLen
         };
-        saveBytesFunc(userId, req, opts).then(function () {
+        saveBytesFunc(userId, req, opts)
+            .then(function () {
             res.status(SC.okPut).end();
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if ("string" !== typeof err) {
                 next(err);
             }
@@ -110,7 +113,8 @@ function makeHandler(root, saveBytesFunc, chunkLimit) {
             else {
                 next(new Error("Unhandled storage error code: " + err));
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

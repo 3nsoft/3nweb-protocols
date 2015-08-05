@@ -24,10 +24,12 @@ function makeHandler(finDelivFunc) {
         var session = req.session;
         var recipient = session.params.recipient;
         var msgId = session.params.msgId;
-        finDelivFunc(recipient, msgId).then(function (resFlag) {
+        finDelivFunc(recipient, msgId)
+            .then(function (resFlag) {
             session.close();
             res.status(200).end();
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if ('string' !== typeof err) {
                 next(err);
             }
@@ -42,7 +44,8 @@ function makeHandler(finDelivFunc) {
             else {
                 next(new Error("Unhandled storage error code: " + err));
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

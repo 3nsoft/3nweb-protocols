@@ -26,6 +26,7 @@ function makeHandler(certifyingFunc) {
         var encryptor = session.params.encryptor;
         var email = session.params.userId;
         var bodyBytes;
+        // decrypt request body
         try {
             bodyBytes = encryptor.open(c);
         }
@@ -35,6 +36,7 @@ function makeHandler(certifyingFunc) {
             return;
         }
         var signedCerts;
+        // extract parameters and certify
         try {
             var reqParams = JSON.parse(utf8.open(bodyBytes));
             if (!reqParams.pkey) {

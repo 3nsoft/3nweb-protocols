@@ -31,7 +31,8 @@ function makeApp() {
             next();
         }
         else {
-            res.status(405).send("Method '" + req.method + "' is not allowed anywhere on this server.");
+            res.status(405).send("Method '" + req.method +
+                "' is not allowed anywhere on this server.");
         }
     });
     app.use(cors.allowCrossDomain(CORS_ALLOWED_HEADERS, CORS_ALLOWED_METHODS));

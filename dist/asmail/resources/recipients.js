@@ -41,6 +41,7 @@ function findMatchIn(lst, address) {
     if ('undefined' !== typeof v) {
         return v;
     }
+    // check parent domains
     while (true) {
         var ind = address.indexOf('.');
         if (ind < 0) {
@@ -68,7 +69,8 @@ function adaptToFreeSpaceLeft(inbox, msgSize) {
     if (msgSize <= 0) {
         return Q.when(msgSize);
     }
-    return inbox.freeSpace().then(function (bytesFree) {
+    return inbox.freeSpace()
+        .then(function (bytesFree) {
         if (bytesFree > 0) {
             return Math.min(bytesFree, msgSize);
         }
@@ -87,18 +89,22 @@ function adaptToFreeSpaceLeft(inbox, msgSize) {
  *     mail box.
  */
 function allowedMsgSizeForAnonSender(inbox, invitation) {
-    return inbox.getAnonSenderPolicy().then(function (policy) {
+    return inbox.getAnonSenderPolicy()
+        .then(function (policy) {
         if (!policy.accept) {
             return 0;
         }
         if (!invitation) {
-            return (policy.acceptWithInvitesOnly ? 0 : policy.defaultMsgSize);
+            return (policy.acceptWithInvitesOnly ?
+                0 : policy.defaultMsgSize);
         }
-        return inbox.getAnonSenderInvites().then(function (invites) {
+        return inbox.getAnonSenderInvites()
+            .then(function (invites) {
             var msgSize = invites[invitation];
             return (msgSize ? msgSize : 0);
         });
-    }).then(function (msgSize) {
+    })
+        .then(function (msgSize) {
         return adaptToFreeSpaceLeft(inbox, msgSize);
     });
 }
@@ -113,7 +119,9 @@ function allowedMsgSizeForAnonSender(inbox, invitation) {
  *     box.
  */
 function allowedMsgSizeForAuthSender(inbox, sender, invitation) {
-    var promise = Q.all([inbox.getAuthSenderPolicy(), inbox.getAuthSenderWhitelist()]).then(function (results) {
+    var promise = Q.all([inbox.getAuthSenderPolicy(),
+        inbox.getAuthSenderWhitelist()])
+        .then(function (results) {
         var policy = results[0];
         var sizeFromWL = findMatchIn(results[1], sender);
         // check whitelist for specific size
@@ -129,7 +137,8 @@ function allowedMsgSizeForAuthSender(inbox, sender, invitation) {
         }
         // if needed, apply blacklist
         if (policy.applyBlackList) {
-            return inbox.getAuthSenderBlacklist().then(function (bList) {
+            return inbox.getAuthSenderBlacklist()
+                .then(function (bList) {
                 if ('undefined' === typeof findMatchIn(bList, sender)) {
                     return policy.defaultMsgSize;
                 }
@@ -139,7 +148,8 @@ function allowedMsgSizeForAuthSender(inbox, sender, invitation) {
             });
         }
         return policy.defaultMsgSize;
-    }).then(function (msgSize) {
+    })
+        .then(function (msgSize) {
         return adaptToFreeSpaceLeft(inbox, msgSize);
     });
     return promise;
@@ -149,7 +159,8 @@ function makeFactory(rootFolder) {
     var ibf = inboxFactoryMod.makeFactory(rootFolder);
     function makeParamGetter(staticGetter) {
         return function (userId) {
-            return ibf.getInbox(userId).then(function (inbox) {
+            return ibf.getInbox(userId)
+                .then(function (inbox) {
                 if (!inbox) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -159,7 +170,8 @@ function makeFactory(rootFolder) {
     }
     function makeParamSetter(staticSetter) {
         return function (userId, param, setDefault) {
-            return ibf.getInbox(userId).then(function (inbox) {
+            return ibf.getInbox(userId)
+                .then(function (inbox) {
                 if (!inbox) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -169,7 +181,8 @@ function makeFactory(rootFolder) {
     }
     function makeBlobSaver(fileHeader) {
         return function (recipient, bytes, opts) {
-            return ibf.getInbox(recipient).then(function (inbox) {
+            return ibf.getInbox(recipient)
+                .then(function (inbox) {
                 if (!inbox) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -184,7 +197,8 @@ function makeFactory(rootFolder) {
     }
     function makeBlobGetter(fileHeader) {
         return function (userId, opts) {
-            return ibf.getInbox(userId).then(function (inbox) {
+            return ibf.getInbox(userId)
+                .then(function (inbox) {
                 if (!inbox) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -194,17 +208,20 @@ function makeFactory(rootFolder) {
     }
     var recipients = {
         add: function (userId) {
-            return ibf.makeNewInboxFor(userId).then(function (inbox) {
+            return ibf.makeNewInboxFor(userId)
+                .then(function (inbox) {
                 return !!inbox;
             });
         },
         exists: function (userId) {
-            return ibf.getInbox(userId).then(function (inbox) {
+            return ibf.getInbox(userId)
+                .then(function (inbox) {
                 return !!inbox;
             });
         },
         getInfo: function (userId) {
-            return ibf.getInbox(userId).then(function (inbox) {
+            return ibf.getInbox(userId)
+                .then(function (inbox) {
                 if (!inbox) {
                     return;
                 }
@@ -214,25 +231,32 @@ function makeFactory(rootFolder) {
                     anonSenders: null,
                     authSenders: null
                 };
-                return inboxMod.Inbox.getPubKey(inbox).then(function (pkey) {
+                return inboxMod.Inbox.getPubKey(inbox)
+                    .then(function (pkey) {
                     info.pubKey = pkey;
                     return inbox.getAnonSenderPolicy();
-                }).then(function (policy) {
+                })
+                    .then(function (policy) {
                     info.anonSenders = policy;
                     return inbox.getAnonSenderInvites();
-                }).then(function (invites) {
+                })
+                    .then(function (invites) {
                     info.anonSenders.inviteTokens = invites;
                     return inbox.getAuthSenderPolicy();
-                }).then(function (policy) {
+                })
+                    .then(function (policy) {
                     info.authSenders = policy;
                     return inbox.getAuthSenderBlacklist();
-                }).then(function (blacklist) {
+                })
+                    .then(function (blacklist) {
                     info.authSenders.blackList = blacklist;
                     return inbox.getAuthSenderWhitelist();
-                }).then(function (whitelist) {
+                })
+                    .then(function (whitelist) {
                     info.authSenders.whiteList = whitelist;
                     return inbox.getAuthSenderInvites();
-                }).then(function (invites) {
+                })
+                    .then(function (invites) {
                     info.authSenders.inviteTokens = invites;
                     return info;
                 });
@@ -244,15 +268,19 @@ function makeFactory(rootFolder) {
         getAnonSenderInvites: makeParamGetter(inboxMod.Inbox.getAnonSenderInvites),
         setAnonSenderInvites: makeParamSetter(inboxMod.Inbox.setAnonSenderInvites),
         allowedMaxMsgSize: function (recipient, sender, invitation) {
-            return ibf.getInbox(recipient).then(function (inbox) {
+            return ibf.getInbox(recipient)
+                .then(function (inbox) {
                 if (!inbox) {
                     return;
                 } // undefined for unknown recipient
-                return (sender ? allowedMsgSizeForAuthSender(inbox, sender, invitation) : allowedMsgSizeForAnonSender(inbox, invitation));
+                return (sender ?
+                    allowedMsgSizeForAuthSender(inbox, sender, invitation) :
+                    allowedMsgSizeForAnonSender(inbox, invitation));
             });
         },
         setMsgStorage: function (recipient, msgMeta, authSender) {
-            return ibf.getInbox(recipient).then(function (inbox) {
+            return ibf.getInbox(recipient)
+                .then(function (inbox) {
                 if (!inbox) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -262,7 +290,8 @@ function makeFactory(rootFolder) {
         saveObjSegments: makeBlobSaver(false),
         saveObjHeader: makeBlobSaver(true),
         finalizeDelivery: function (recipient, msgId) {
-            return ibf.getInbox(recipient).then(function (inbox) {
+            return ibf.getInbox(recipient)
+                .then(function (inbox) {
                 if (!inbox) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -270,7 +299,8 @@ function makeFactory(rootFolder) {
             });
         },
         getMsgIds: function (userId) {
-            return ibf.getInbox(userId).then(function (inbox) {
+            return ibf.getInbox(userId)
+                .then(function (inbox) {
                 if (!inbox) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -278,7 +308,8 @@ function makeFactory(rootFolder) {
             });
         },
         getMsgMeta: function (userId, msgId) {
-            return ibf.getInbox(userId).then(function (inbox) {
+            return ibf.getInbox(userId)
+                .then(function (inbox) {
                 if (!inbox) {
                     throw exports.SC.USER_UNKNOWN;
                 }
@@ -286,7 +317,8 @@ function makeFactory(rootFolder) {
             });
         },
         deleteMsg: function (userId, msgId) {
-            return ibf.getInbox(userId).then(function (inbox) {
+            return ibf.getInbox(userId)
+                .then(function (inbox) {
                 if (!inbox) {
                     throw exports.SC.USER_UNKNOWN;
                 }

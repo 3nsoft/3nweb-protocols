@@ -23,16 +23,19 @@ function makeHandler(existsFunc) {
     }
     return function (req, res, next) {
         var userId = req.session.params.userId;
-        existsFunc(userId).then(function (exists) {
+        existsFunc(userId)
+            .then(function (exists) {
             if (exists) {
                 res.status(200).end();
             }
             else {
                 res.status(474).end();
             }
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             next(err);
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

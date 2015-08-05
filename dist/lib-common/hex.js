@@ -19,6 +19,7 @@
 var HEX_INT_TO_LETTER_DICTIONARY = "0123456789abcdef";
 var HEX_LETTER_TO_INT_DICTIONARY = (function () {
     var map = {}, ch;
+    // This is proper alphabet
     for (var i = 0; i < HEX_INT_TO_LETTER_DICTIONARY.length; i += 1) {
         ch = HEX_INT_TO_LETTER_DICTIONARY[i];
         map[ch] = i;
@@ -44,7 +45,8 @@ function pack(bytes) {
 exports.pack = pack;
 function open(str) {
     if ((str.length % 2) > 0) {
-        throw new Error("Given string has odd number of charaters, while " + "in hex representation every byte is represented by two letters.");
+        throw new Error("Given string has odd number of charaters, while " +
+            "in hex representation every byte is represented by two letters.");
     }
     var bytes = new Uint8Array(str.length / 2);
     var b;
@@ -54,13 +56,15 @@ function open(str) {
         ch = str[i];
         n = HEX_LETTER_TO_INT_DICTIONARY[ch];
         if ('undefined' === typeof n) {
-            throw new Error("String contains, at position " + i + ", character '" + ch + "', which is not present in hex representation alphabet.");
+            throw new Error("String contains, at position " + i + ", character '" + ch +
+                "', which is not present in hex representation alphabet.");
         }
         b = (n << 4);
         ch = str[i + 1];
         n = HEX_LETTER_TO_INT_DICTIONARY[ch];
         if ('undefined' === typeof n) {
-            throw new Error("String contains, at position " + (i + 1) + ", character '" + ch + "', which is not present in hex representation alphabet.");
+            throw new Error("String contains, at position " + (i + 1) + ", character '" + ch +
+                "', which is not present in hex representation alphabet.");
         }
         b = (b | n);
         bytes[i / 2] = b;

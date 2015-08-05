@@ -22,10 +22,12 @@ function replyOnError(res, trans) {
             throw "Missing both sizes and diff, or both are present";
         }
         if (trans.sizes) {
-            if (('number' !== typeof trans.sizes.header) || (trans.sizes.header < 1)) {
+            if (('number' !== typeof trans.sizes.header) ||
+                (trans.sizes.header < 1)) {
                 throw "Bad or missing header length";
             }
-            if (('number' !== typeof trans.sizes.segments) || (trans.sizes.segments < 0)) {
+            if (('number' !== typeof trans.sizes.segments) ||
+                (trans.sizes.segments < 0)) {
                 throw "Bad or missing segments length";
             }
         }
@@ -49,11 +51,13 @@ function makeHandler(root, startTransFunc) {
         if (replyOnError(res, trans)) {
             return;
         }
-        startTransFunc(userId, objId, trans).then(function (transactionId) {
+        startTransFunc(userId, objId, trans)
+            .then(function (transactionId) {
             res.status(SC.ok).json({
                 transactionId: transactionId
             });
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if ("string" !== typeof err) {
                 next(err);
             }
@@ -67,7 +71,8 @@ function makeHandler(root, startTransFunc) {
                 res.status(SC.objAlreadyExists).send("Object " + objId + " already exists.");
             }
             else if (err === usersMod.SC.WRONG_OBJ_STATE) {
-                res.status(SC.incompatibleObjState).send("Object " + objId + " is in a state, that does not allow " + "to procede with this request.");
+                res.status(SC.incompatibleObjState).send("Object " + objId + " is in a state, that does not allow " +
+                    "to procede with this request.");
             }
             else if (err === usersMod.SC.USER_UNKNOWN) {
                 res.status(api.ERR_SC.server).send("Recipient disappeared from the system.");
@@ -76,7 +81,8 @@ function makeHandler(root, startTransFunc) {
             else {
                 next(new Error("Unhandled storage error code: " + err));
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

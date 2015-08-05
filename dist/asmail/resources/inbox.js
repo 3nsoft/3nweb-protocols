@@ -38,6 +38,7 @@ var jwk = require('../../lib-common/jwkeys');
 var random = require('../../lib-server/random');
 var fops = require('../../lib-server/resources/file_ops');
 var confUtil = require('../../lib-server/conf-util');
+var os = require('os');
 exports.SC = {
     OBJ_EXIST: 'obj-already-exist',
     USER_UNKNOWN: 'user-unknown',
@@ -54,8 +55,12 @@ var Inbox = (function () {
     function Inbox(userId, inboxPath, writeBufferSize, readBufferSize) {
         this.userId = userId;
         this.path = inboxPath;
-        this.fileWritingBufferSize = (writeBufferSize ? confUtil.stringToNumOfBytes(writeBufferSize) : DEFAULT_FILE_WRITE_BUFFER_SIZE);
-        this.fileReadingBufferSize = (readBufferSize ? confUtil.stringToNumOfBytes(readBufferSize) : DEFAULT_FILE_READ_BUFFER_SIZE);
+        this.fileWritingBufferSize = (writeBufferSize ?
+            confUtil.stringToNumOfBytes(writeBufferSize) :
+            DEFAULT_FILE_WRITE_BUFFER_SIZE);
+        this.fileReadingBufferSize = (readBufferSize ?
+            confUtil.stringToNumOfBytes(readBufferSize) :
+            DEFAULT_FILE_READ_BUFFER_SIZE);
         Object.freeze(this);
     }
     /**
@@ -64,9 +69,13 @@ var Inbox = (function () {
      * been constructed.
      */
     Inbox.initInbox = function (inbox) {
-        var promise = Q.all([Q.nfcall(fs.mkdir, inbox.path + '/messages'), Q.nfcall(fs.mkdir, inbox.path + '/delivery'), Q.nfcall(fs.mkdir, inbox.path + '/info')]).then(function () {
+        var promise = Q.all([Q.nfcall(fs.mkdir, inbox.path + '/messages'),
+            Q.nfcall(fs.mkdir, inbox.path + '/delivery'),
+            Q.nfcall(fs.mkdir, inbox.path + '/info')])
+            .then(function () {
             return Q.nfcall(fs.writeFile, inbox.path + '/info/userid', inbox.userId, { encoding: 'utf8', flag: 'wx' });
-        }).then(function () {
+        })
+            .then(function () {
             return setDefaultParameters(inbox);
         });
         return promise;
@@ -75,10 +84,18 @@ var Inbox = (function () {
      * @return a promise, resolvable to number bytes used by this inbox.
      */
     Inbox.prototype.usedSpace = function () {
-        var promise = Q.nfcall(exec, "du -k -s " + this.path).then(function (stdOut) {
+        // XXX hack due to missing du in windows
+        if (os.type().match('Windows')) {
+            console.warn("\nOn Windows meaningful check of space, " +
+                "occupied by user is skipped, for now");
+            return Q.when(0);
+        }
+        var promise = Q.nfcall(exec, "du -k -s " + this.path)
+            .then(function (stdOut) {
             var kUsed = parseInt(stdOut);
             if (isNaN(kUsed)) {
-                throw new Error("Shell utility du outputs a string, " + "which cannot be parsed as integer.");
+                throw new Error("Shell utility du outputs a string, " +
+                    "which cannot be parsed as integer.");
             }
             return kUsed * 1024;
         });
@@ -90,10 +107,12 @@ var Inbox = (function () {
     Inbox.prototype.freeSpace = function () {
         var _this = this;
         var usedSpace = 0;
-        var promise = this.usedSpace().then(function (bUsed) {
+        var promise = this.usedSpace()
+            .then(function (bUsed) {
             usedSpace = bUsed;
             return _this.getSpaceQuota();
-        }).then(function (quota) {
+        })
+            .then(function (quota) {
             return Math.max(0, quota - usedSpace);
         });
         return promise;
@@ -106,15 +125,15 @@ var Inbox = (function () {
      */
     Inbox.prototype.recordMsgMeta = function (msgMeta, authSender) {
         var delivPath = this.path + '/delivery';
-        var promise = genMsgIdAndMakeFolder(delivPath).then(function (msgId) {
+        var promise = genMsgIdAndMakeFolder(delivPath)
+            .then(function (msgId) {
             var meta = {
                 extMeta: msgMeta,
                 deliveryStart: Date.now(),
                 authSender: authSender
             };
-            return Q.nfcall(fs.writeFile, delivPath + '/' + msgId + '/meta.json', JSON.stringify(meta), { encoding: 'utf8', flag: 'wx' }).then(function () {
-                return msgId;
-            });
+            return Q.nfcall(fs.writeFile, delivPath + '/' + msgId + '/meta.json', JSON.stringify(meta), { encoding: 'utf8', flag: 'wx' })
+                .then(function () { return msgId; });
         });
         return promise;
     };
@@ -128,7 +147,8 @@ var Inbox = (function () {
      */
     Inbox.prototype.getMsgMeta = function (msgId, incompleteMsg) {
         var msgFolder = this.path + (incompleteMsg ? '/delivery' : '/messages');
-        return Q.nfcall(fs.readFile, msgFolder + '/' + msgId + '/meta.json', { encoding: 'utf8', flag: 'r' }).then(function (str) {
+        return Q.nfcall(fs.readFile, msgFolder + '/' + msgId + '/meta.json', { encoding: 'utf8', flag: 'r' })
+            .then(function (str) {
             return JSON.parse(str);
         }, function (err) {
             if (err.code === fErrMod.Code.noFile) {
@@ -147,7 +167,8 @@ var Inbox = (function () {
      * found in SC of this object.
      */
     Inbox.prototype.checkIds = function (msgId, objId) {
-        return this.getMsgMeta(msgId, true).then(function (msgMeta) {
+        return this.getMsgMeta(msgId, true)
+            .then(function (msgMeta) {
             if (msgMeta.extMeta.objIds.indexOf(objId) < 0) {
                 throw exports.SC.OBJ_UNKNOWN;
             }
@@ -177,8 +198,10 @@ var Inbox = (function () {
      */
     Inbox.prototype.saveObjChunk = function (msgId, objId, fileHeader, allocateFile, totalSize, offset, chunkLen, chunk) {
         var _this = this;
-        var filePath = this.path + '/delivery/' + msgId + '/' + objId + (fileHeader ? XSP_HEADER_FILE_NAME_END : XSP_SEGS_FILE_NAME_END);
-        var promise = this.checkIds(msgId, objId).then(function () {
+        var filePath = this.path + '/delivery/' + msgId + '/' + objId +
+            (fileHeader ? XSP_HEADER_FILE_NAME_END : XSP_SEGS_FILE_NAME_END);
+        var promise = this.checkIds(msgId, objId)
+            .then(function () {
             if (allocateFile) {
                 if ((offset + chunkLen) > totalSize) {
                     throw exports.SC.WRITE_OVERFLOW;
@@ -186,22 +209,22 @@ var Inbox = (function () {
                 return fops.createEmptyFile(filePath, totalSize);
             }
             else {
-                return fops.getFileSize(filePath).then(function (fileSize) {
+                return fops.getFileSize(filePath)
+                    .then(function (fileSize) {
                     if ((offset + chunkLen) > fileSize) {
                         throw exports.SC.WRITE_OVERFLOW;
                     }
                 });
             }
-        }).then(function () {
-            return fops.streamToExistingFile(filePath, offset, chunkLen, chunk, _this.fileWritingBufferSize).fail(function (err) {
+        })
+            .then(function () {
+            return fops.streamToExistingFile(filePath, offset, chunkLen, chunk, _this.fileWritingBufferSize)
+                .fail(function (err) {
                 if (!allocateFile) {
                     throw err;
                 }
-                return Q.nfcall(fs.unlink, filePath).then(function () {
-                    throw err;
-                }, function () {
-                    throw err;
-                });
+                return Q.nfcall(fs.unlink, filePath)
+                    .then(function () { throw err; }, function () { throw err; });
             });
         });
         return promise;
@@ -218,23 +241,25 @@ var Inbox = (function () {
      */
     Inbox.prototype.appendObj = function (msgId, objId, fileHeader, allocateFile, bytes, bytesLen) {
         var _this = this;
-        var filePath = this.path + '/delivery/' + msgId + '/' + objId + (fileHeader ? XSP_HEADER_FILE_NAME_END : XSP_SEGS_FILE_NAME_END);
-        var promise = this.checkIds(msgId, objId).then(function () {
+        var filePath = this.path + '/delivery/' + msgId + '/' + objId +
+            (fileHeader ? XSP_HEADER_FILE_NAME_END : XSP_SEGS_FILE_NAME_END);
+        var promise = this.checkIds(msgId, objId)
+            .then(function () {
             if (allocateFile) {
-                return fops.createEmptyFile(filePath, 0).then(function () {
-                    return 0;
-                });
+                return fops.createEmptyFile(filePath, 0)
+                    .then(function () { return 0; });
             }
             else {
                 return fops.getFileSize(filePath);
             }
-        }).then(function (initFileSize) {
-            return fops.streamToExistingFile(filePath, initFileSize, bytesLen, bytes, _this.fileWritingBufferSize).fail(function (err) {
-                return (allocateFile ? Q.nfcall(fs.unlink, filePath) : Q.nfcall(fs.truncate, filePath, initFileSize)).then(function () {
-                    throw err;
-                }, function () {
-                    throw err;
-                });
+        })
+            .then(function (initFileSize) {
+            return fops.streamToExistingFile(filePath, initFileSize, bytesLen, bytes, _this.fileWritingBufferSize)
+                .fail(function (err) {
+                return (allocateFile ?
+                    Q.nfcall(fs.unlink, filePath) :
+                    Q.nfcall(fs.truncate, filePath, initFileSize))
+                    .then(function () { throw err; }, function () { throw err; });
             });
         });
         return promise;
@@ -253,8 +278,10 @@ var Inbox = (function () {
         }
         var getSize = function (i, head) {
             var objId = objIds[i];
-            var fName = _this.path + '/delivery/' + msgId + '/' + objId + (head ? XSP_HEADER_FILE_NAME_END : XSP_SEGS_FILE_NAME_END);
-            return fops.getFileSize(fName).then(function (size) {
+            var fName = _this.path + '/delivery/' + msgId + '/' + objId +
+                (head ? XSP_HEADER_FILE_NAME_END : XSP_SEGS_FILE_NAME_END);
+            return fops.getFileSize(fName)
+                .then(function (size) {
                 if (head) {
                     sizes[objId] = {
                         header: size,
@@ -274,9 +301,8 @@ var Inbox = (function () {
                 }
             });
         };
-        return getSize(0, true).then(function () {
-            return sizes;
-        });
+        return getSize(0, true)
+            .then(function () { return sizes; });
     };
     /**
      * @param msgId
@@ -288,8 +314,10 @@ var Inbox = (function () {
     Inbox.prototype.moveMsgFromDeliveryToMessagesFolder = function (msgId, attempt) {
         var _this = this;
         var srcFolder = this.path + '/delivery/' + msgId + '/';
-        var dstFolder = this.path + '/messages/' + msgId + (!attempt ? '' : '' + attempt) + '/';
-        return Q.nfcall(fs.stat, dstFolder).then(function () {
+        var dstFolder = this.path + '/messages/' + msgId +
+            (!attempt ? '' : '' + attempt) + '/';
+        return Q.nfcall(fs.stat, dstFolder)
+            .then(function () {
             if (attempt) {
                 attempt += 1;
             }
@@ -312,14 +340,18 @@ var Inbox = (function () {
      */
     Inbox.prototype.completeMsgDelivery = function (msgId) {
         var _this = this;
-        var promise = this.getMsgMeta(msgId, true).then(function (msgMeta) {
+        var promise = this.getMsgMeta(msgId, true)
+            .then(function (msgMeta) {
             msgMeta.deliveryCompletion = Date.now();
-            return _this.getMsgObjSizes(msgId, msgMeta.extMeta.objIds).then(function (objSizes) {
+            return _this.getMsgObjSizes(msgId, msgMeta.extMeta.objIds)
+                .then(function (objSizes) {
                 msgMeta.objSizes = objSizes;
-            }).then(function () {
+            })
+                .then(function () {
                 return Q.nfcall(fs.writeFile, _this.path + '/delivery/' + msgId + '/meta.json', JSON.stringify(msgMeta), { encoding: 'utf8', flag: 'r+' });
             });
-        }).then(function () {
+        })
+            .then(function () {
             return _this.moveMsgFromDeliveryToMessagesFolder(msgId);
         });
         return promise;
@@ -340,7 +372,8 @@ var Inbox = (function () {
     Inbox.prototype.rmMsg = function (msgId) {
         var msgPath = this.path + '/messages/' + msgId;
         var rmPath = msgPath + '~remove';
-        return Q.nfcall(fs.rename, msgPath, rmPath).then(function () {
+        return Q.nfcall(fs.rename, msgPath, rmPath)
+            .then(function () {
             return fops.rmdir(rmPath);
         }, function (err) {
             if (err.code === fErrMod.Code.noFile) {
@@ -364,8 +397,10 @@ var Inbox = (function () {
      */
     Inbox.prototype.getObj = function (msgId, objId, fileHeader, offset, maxLen) {
         var _this = this;
-        var filePath = this.path + '/messages/' + msgId + '/' + objId + (fileHeader ? XSP_HEADER_FILE_NAME_END : XSP_SEGS_FILE_NAME_END);
-        var promise = fops.getFileSize(filePath).then(function (objSize) {
+        var filePath = this.path + '/messages/' + msgId + '/' + objId +
+            (fileHeader ? XSP_HEADER_FILE_NAME_END : XSP_SEGS_FILE_NAME_END);
+        var promise = fops.getFileSize(filePath)
+            .then(function (objSize) {
             if (objSize <= offset) {
                 return;
             }
@@ -409,7 +444,10 @@ var Inbox = (function () {
             initKeyCerts = null;
         }
         else {
-            var isOK = ('object' === typeof initKeyCerts) && !!initKeyCerts && jwk.isLikeSignedKeyCert(initKeyCerts.pkeyCert) && jwk.isLikeSignedKeyCert(initKeyCerts.userCert) && jwk.isLikeSignedKeyCert(initKeyCerts.provCert);
+            var isOK = ('object' === typeof initKeyCerts) && !!initKeyCerts &&
+                jwk.isLikeSignedKeyCert(initKeyCerts.pkeyCert) &&
+                jwk.isLikeSignedKeyCert(initKeyCerts.userCert) &&
+                jwk.isLikeSignedKeyCert(initKeyCerts.provCert);
             if (!isOK) {
                 return Q.when(false);
             }
@@ -454,7 +492,11 @@ var Inbox = (function () {
             };
         }
         else {
-            var isOK = ('object' === typeof policy) && !!policy && ('boolean' === typeof policy.accept) && ('boolean' === typeof policy.acceptWithInvitesOnly) && ('number' === typeof policy.defaultMsgSize) && (policy.defaultMsgSize > 500);
+            var isOK = ('object' === typeof policy) && !!policy &&
+                ('boolean' === typeof policy.accept) &&
+                ('boolean' === typeof policy.acceptWithInvitesOnly) &&
+                ('number' === typeof policy.defaultMsgSize) &&
+                (policy.defaultMsgSize > 500);
             if (!isOK) {
                 return Q.when(false);
             }
@@ -503,7 +545,12 @@ var Inbox = (function () {
             };
         }
         else {
-            var isOK = ('object' === typeof policy) && !!policy && ('boolean' === typeof policy.applyBlackList) && ('boolean' === typeof policy.acceptFromWhiteListOnly) && ('boolean' === typeof policy.acceptWithInvitesOnly) && ('number' === typeof policy.defaultMsgSize) && (policy.defaultMsgSize > 500);
+            var isOK = ('object' === typeof policy) && !!policy &&
+                ('boolean' === typeof policy.applyBlackList) &&
+                ('boolean' === typeof policy.acceptFromWhiteListOnly) &&
+                ('boolean' === typeof policy.acceptWithInvitesOnly) &&
+                ('number' === typeof policy.defaultMsgSize) &&
+                (policy.defaultMsgSize > 500);
             if (!isOK) {
                 return Q.when(false);
             }
@@ -595,7 +642,8 @@ Object.freeze(Inbox);
  * named file.
  */
 function writeJSONFile(json, path) {
-    return Q.nfcall(fs.writeFile, path, JSON.stringify(json), { encoding: 'utf8', flag: 'w' }).then(function () {
+    return Q.nfcall(fs.writeFile, path, JSON.stringify(json), { encoding: 'utf8', flag: 'w' })
+        .then(function () {
         return true;
     });
 }
@@ -604,13 +652,15 @@ function writeJSONFile(json, path) {
  * @return a promise, resolvable to json object, read from the named file.
  */
 function readJSONFile(path) {
-    var promise = Q.nfcall(fs.readFile, path).then(function (buf) {
+    var promise = Q.nfcall(fs.readFile, path)
+        .then(function (buf) {
         return JSON.parse(buf.toString('utf8'));
     });
     return promise;
 }
 function setDefaultParameters(inbox) {
-    var promise = Q.all([Q.nfcall(fs.mkdir, inbox.path + '/info/anonymous'), Q.nfcall(fs.mkdir, inbox.path + '/info/authenticated')]);
+    var promise = Q.all([Q.nfcall(fs.mkdir, inbox.path + '/info/anonymous'),
+        Q.nfcall(fs.mkdir, inbox.path + '/info/authenticated')]);
     var filePromises = [];
     // public key
     filePromises.push(Inbox.setPubKey(inbox, null, true));
@@ -641,7 +691,8 @@ function setDefaultParameters(inbox) {
  */
 function genMsgIdAndMakeFolder(delivPath) {
     var msgId = base64.urlSafe.pack(random.bytes(32));
-    var promise = Q.nfcall(fs.mkdir, delivPath + '/' + msgId).then(function () {
+    var promise = Q.nfcall(fs.mkdir, delivPath + '/' + msgId)
+        .then(function () {
         return msgId;
     }, function (err) {
         if (err.code === fErrMod.Code.fileExists) {

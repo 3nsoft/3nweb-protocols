@@ -37,8 +37,12 @@ function makeApp(sessions, recipients, midAuthorizer) {
     // *** Require authorized session for everything below ***
     app.use(sessions.ensureAuthorizedSession());
     app.post('/' + api.closeSession.URL_END, closeSession.makeHandler());
-    app.route('/' + api.p.initPubKey.URL_END).get(getParam.makeHandler(recipients.getPubKey)).put(bodyParsers.json('4kb', true), setParam.makeHandler(recipients.setPubKey));
-    app.route('/' + api.p.anonSenderInvites.URL_END).get(getParam.makeHandler(recipients.getAnonSenderInvites)).put(bodyParsers.json('4kb', true), setParam.makeHandler(recipients.setAnonSenderInvites));
+    app.route('/' + api.p.initPubKey.URL_END)
+        .get(getParam.makeHandler(recipients.getPubKey))
+        .put(bodyParsers.json('4kb', true), setParam.makeHandler(recipients.setPubKey));
+    app.route('/' + api.p.anonSenderInvites.URL_END)
+        .get(getParam.makeHandler(recipients.getAnonSenderInvites))
+        .put(bodyParsers.json('4kb', true), setParam.makeHandler(recipients.setAnonSenderInvites));
     return app;
 }
 exports.makeApp = makeApp;

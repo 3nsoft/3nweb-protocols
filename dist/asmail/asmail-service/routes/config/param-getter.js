@@ -22,9 +22,11 @@ function makeHandler(paramGetter) {
     return function (req, res, next) {
         var session = req.session;
         var userId = session.params.userId;
-        paramGetter(userId).then(function (value) {
+        paramGetter(userId)
+            .then(function (value) {
             res.status(api.PARAM_SC.ok).json(value);
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if ("string" !== typeof err) {
                 next(err);
             }
@@ -32,7 +34,8 @@ function makeHandler(paramGetter) {
                 res.status(api.ERR_SC.server).send("Recipient disappeared from the system.");
                 session.close();
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

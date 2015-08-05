@@ -25,9 +25,11 @@ var fops = require('../../lib-server/resources/file_ops');
  */
 function createInboxFolder(rootFolder) {
     var inboxFolderPath = rootFolder + "/" + random.stringOfB64UrlSafeChars(20);
-    var promise = Q.nfcall(fs.mkdir, inboxFolderPath).then(function () {
+    var promise = Q.nfcall(fs.mkdir, inboxFolderPath)
+        .then(function () {
         return inboxFolderPath;
-    }).fail(function (err) {
+    })
+        .fail(function (err) {
         if (err.code === fErrMod.Code.fileExists) {
             return createInboxFolder(rootFolder);
         }
@@ -50,7 +52,9 @@ function pickupExistingInboxes(rootFolder) {
             userId = fs.readFileSync(path + '/info/userid', { encoding: 'utf8' });
         }
         catch (err) {
-            console.error("Folder " + fName + " cannot be seen as an inbox " + "in the root folder " + rootFolder + "\ndue to the following\n" + err.stack);
+            console.error("Folder " + fName + " cannot be seen as an inbox " +
+                "in the root folder " + rootFolder +
+                "\ndue to the following\n" + err.stack);
             return;
         }
         userInboxPaths[userId] = path;
@@ -67,10 +71,12 @@ function makeFactory(rootFolder, writeBufferSize, readBufferSize) {
             if ('undefined' !== typeof userInboxPaths[userId]) {
                 return Q.when();
             }
-            return createInboxFolder(rootFolder).then(function (path) {
+            return createInboxFolder(rootFolder)
+                .then(function (path) {
                 var inbox = new inboxMod.Inbox(userId, path, writeBufferSize, readBufferSize);
                 userInboxPaths[inbox.userId] = inbox.path;
-                return inboxMod.Inbox.initInbox(inbox).then(function () {
+                return inboxMod.Inbox.initInbox(inbox)
+                    .then(function () {
                     return inbox;
                 });
             });

@@ -27,7 +27,9 @@ var PATHS = {
     shared: '/shared/'
 };
 function setupStaticEntryRoute(app) {
-    app.route('/').all(cors.allowCrossDomain(["Content-Type"], ['GET'])).get(function (req, res) {
+    app.route('/')
+        .all(cors.allowCrossDomain(["Content-Type"], ['GET']))
+        .get(function (req, res) {
         var path = req.originalUrl;
         if (path[path.length - 1] !== '/') {
             path = path + '/';

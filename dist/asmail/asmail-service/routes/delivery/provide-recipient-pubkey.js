@@ -27,9 +27,11 @@ function makeHandler(pkeyProvidingFunc) {
     }
     return function (req, res, next) {
         var session = req.session;
-        pkeyProvidingFunc(session.params.recipient).then(function (certs) {
+        pkeyProvidingFunc(session.params.recipient)
+            .then(function (certs) {
             res.status(SC.ok).json(certs);
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if ("string" !== typeof err) {
                 next(err);
             }
@@ -37,7 +39,8 @@ function makeHandler(pkeyProvidingFunc) {
                 res.status(api.ERR_SC.server).send("Recipient disappeared from the system.");
                 session.close();
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

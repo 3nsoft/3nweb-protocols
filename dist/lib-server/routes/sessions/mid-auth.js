@@ -34,7 +34,8 @@ function makeHandler(midAuthorizingFunc) {
             req.session.close();
             return;
         }
-        midAuthorizingFunc(req.hostname, sessionId, rb.assertion, rb.userCert, rb.provCert).then(function (userId) {
+        midAuthorizingFunc(req.hostname, sessionId, rb.assertion, rb.userCert, rb.provCert)
+            .then(function (userId) {
             if (!userId || (userId !== req.session.params.userId)) {
                 req.session.close();
                 res.status(SC.authFailed).send("Server is not accepting provided credentials.");
@@ -43,9 +44,11 @@ function makeHandler(midAuthorizingFunc) {
                 req.session.isAuthorized = true;
                 res.status(SC.ok).end();
             }
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             next(err);
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

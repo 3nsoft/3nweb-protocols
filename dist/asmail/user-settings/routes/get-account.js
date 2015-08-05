@@ -24,16 +24,19 @@ function makeHandler(getUserInfoFunc) {
     }
     return function (req, res, next) {
         var userId = req.session.params.userId;
-        getUserInfoFunc(userId).then(function (userInfo) {
+        getUserInfoFunc(userId)
+            .then(function (userInfo) {
             if (userInfo) {
                 res.status(200).json(userInfo);
             }
             else {
                 res.status(474).json({ error: "There is no account for " + userId });
             }
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             next(err);
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

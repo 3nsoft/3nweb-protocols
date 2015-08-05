@@ -44,7 +44,8 @@ function byteCollector(maxSize, contentType, parser) {
     return function (req, res, next) {
         // check Content-Type
         if (!req.is(contentType)) {
-            return next(makeErr(415, "Content-Type must be " + contentType + " for this call."));
+            return next(makeErr(415, "Content-Type must be " +
+                contentType + " for this call."));
         }
         // get and check Content-Length
         var contentLength = parseInt(req.get(HTTP_HEADER.contentLength), 10);
@@ -107,7 +108,8 @@ function json(maxSize, allowNonObject) {
         catch (err) {
             return next(makeErr(400, "Request body cannot be interpreted as JSON."));
         }
-        if (!allowNonObject && (!req.body || ('object' !== typeof req.body))) {
+        if (!allowNonObject &&
+            (!req.body || ('object' !== typeof req.body))) {
             return next(makeErr(400, "Request body is not a JSON object."));
         }
         next();

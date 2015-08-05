@@ -89,7 +89,8 @@ var midRoot = {
         use: mid.KEY_USE.ROOT,
         alg: nacl.signing.JWK_ALG_NAME,
         kid: 'EPQ6Xdz9aiaY',
-        k: 'RD3grZ1Kvmox8WAhNZofhu7JKQsXd3l1wQEGmVifu7V' + 'Tl+MrO5MPUvDL1UA1gk8woN0FbbPpDeC22PD0X5EtLw=='
+        k: 'RD3grZ1Kvmox8WAhNZofhu7JKQsXd3l1wQEGmVifu7V' +
+            'Tl+MrO5MPUvDL1UA1gk8woN0FbbPpDeC22PD0X5EtLw=='
     }
 };
 midRoot.cert = mid.idProvider.makeSelfSignedCert('localhost', 180 * 24 * 60 * 60, midRoot.skey);

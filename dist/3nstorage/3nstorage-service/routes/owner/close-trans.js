@@ -24,9 +24,11 @@ function makeHandler(root, normalClosing, closeTransFunc) {
         var userId = req.session.params.userId;
         var objId = (root ? null : req.params.objId);
         var transactionId = req.params.transactionId;
-        closeTransFunc(userId, objId, transactionId).then(function () {
+        closeTransFunc(userId, objId, transactionId)
+            .then(function () {
             res.status(SC.ok).end();
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if ("string" !== typeof err) {
                 next(err);
             }
@@ -43,7 +45,8 @@ function makeHandler(root, normalClosing, closeTransFunc) {
             else {
                 next(new Error("Unhandled storage error code: " + err));
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

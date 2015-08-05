@@ -37,7 +37,8 @@ function findProblemWithObjIds(ids) {
 }
 function makeHandler(setMsgStorageFunc, maxChunk) {
     if ('function' !== typeof setMsgStorageFunc) {
-        throw new TypeError("Given argument 'setMsgStorageFunc' must " + "be function, but is not.");
+        throw new TypeError("Given argument 'setMsgStorageFunc' must " +
+            "be function, but is not.");
     }
     var maxChunkSize = confUtil.stringToNumOfBytes(maxChunk);
     return function (req, res, next) {
@@ -56,13 +57,15 @@ function makeHandler(setMsgStorageFunc, maxChunk) {
             res.status(api.ERR_SC.malformed).json(findProblemWithObjIds(objIds));
             return;
         }
-        setMsgStorageFunc(recipient, msgMeta, sender).then(function (msgId) {
+        setMsgStorageFunc(recipient, msgMeta, sender)
+            .then(function (msgId) {
             session.params.msgId = msgId;
             res.status(SC.ok).json({
                 msgId: msgId,
                 maxChunkSize: maxChunkSize
             });
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if ("string" !== typeof err) {
                 next(err);
             }
@@ -70,7 +73,8 @@ function makeHandler(setMsgStorageFunc, maxChunk) {
                 res.status(api.ERR_SC.server).send("Recipient disappeared from the system.");
                 session.close();
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

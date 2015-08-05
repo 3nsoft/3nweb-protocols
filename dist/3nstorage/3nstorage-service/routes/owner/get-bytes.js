@@ -46,20 +46,23 @@ function makeHandler(root, getObjFunc) {
             maxLen: maxLen,
             version: version
         };
-        getObjFunc(userId, opts).then(function (objReader) {
+        getObjFunc(userId, opts)
+            .then(function (objReader) {
             if (objReader) {
                 res.status(api.objSegs.SC.okGet);
                 res.set(api.HTTP_HEADER.contentType, api.BIN_TYPE);
                 res.set(api.HTTP_HEADER.contentLength, '' + objReader.len);
                 res.set(api.HTTP_HEADER.objVersion, '' + objReader.version);
-                return objReader.pipeTo(res).fin(function () {
+                return objReader.pipeTo(res)
+                    .fin(function () {
                     res.end();
                 });
             }
             else {
                 res.status(api.objSegs.SC.okGet).send(EMPTY_BUFFER);
             }
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             if ("string" !== typeof err) {
                 next(err);
             }
@@ -73,7 +76,8 @@ function makeHandler(root, getObjFunc) {
             else {
                 next(new Error("Unhandled storage error code: " + err));
             }
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

@@ -81,7 +81,8 @@ var Delta = (function () {
         if (this.byteCount.done) {
             throw new Error("This delta is complete, and may no longer be modified.");
         }
-        if (((this.byteCount.ifP + len) > this.ifSize) || ((this.byteCount.rfP + len) > this.rfSize)) {
+        if (((this.byteCount.ifP + len) > this.ifSize) ||
+            ((this.byteCount.rfP + len) > this.rfSize)) {
             throw new Error("Too many bytes to skip");
         }
         this.byteCount.ifP += len;
@@ -103,9 +104,11 @@ var Delta = (function () {
         if ((this.byteCount.rfP + len) > this.rfSize) {
             throw new Error("Too many bytes to insert");
         }
-        var prevCh = ((this.changes.length > 0) ? this.changes[this.changes.length - 1] : null);
+        var prevCh = ((this.changes.length > 0) ?
+            this.changes[this.changes.length - 1] : null);
         var ch;
-        if (prevCh && (prevCh.op === Delta.INSERT) && (prevCh.ifP === this.byteCount.ifP)) {
+        if (prevCh && (prevCh.op === Delta.INSERT) &&
+            (prevCh.ifP === this.byteCount.ifP)) {
             // extend previous insert to more bytes
             prevCh.len += len;
             ch = prevCh;
@@ -140,9 +143,11 @@ var Delta = (function () {
         if ((this.byteCount.ifP + len) > this.ifSize) {
             throw new Error("Too many bytes to delete");
         }
-        var prevCh = ((this.changes.length > 0) ? this.changes[this.changes.length - 1] : null);
+        var prevCh = ((this.changes.length > 0) ?
+            this.changes[this.changes.length - 1] : null);
         var ch;
-        if (prevCh && (prevCh.op === Delta.DELETE) && (prevCh.rfP === this.byteCount.rfP)) {
+        if (prevCh && (prevCh.op === Delta.DELETE) &&
+            (prevCh.rfP === this.byteCount.rfP)) {
             // extend previous delete to more bytes
             prevCh.len += len;
             ch = prevCh;
@@ -324,7 +329,8 @@ var Delta = (function () {
             throw new Error("Given deltas do not apply to the same object.");
         }
         if (d12.rfTS !== d23.ifTS) {
-            throw new Error("Seconds delta's initial state is not the same as " + "a resultant state in the first delta.");
+            throw new Error("Seconds delta's initial state is not the same as " +
+                "a resultant state in the first delta.");
         }
         if (d12.rfSize !== d23.ifSize) {
             throw new Error("Mismatching sizes of the same common state.");
@@ -349,10 +355,12 @@ var Delta = (function () {
          * been processed.
          */
         function merge12Insert(ins12, byteOffset) {
-            var insByteOffset = (('number' === typeof byteOffset) ? byteOffset : 0);
+            var insByteOffset = (('number' === typeof byteOffset) ?
+                byteOffset : 0);
             var ins12end = ins12.rfP + ins12.len;
             var x, ch13, overlap;
-            assert.ok(((p2 - insByteOffset) === ins12.rfP), "Internal counter " + "point 2, and inserted bytes offset, are misaligned.");
+            assert.ok(((p2 - insByteOffset) === ins12.rfP), "Internal counter " +
+                "point 2, and inserted bytes offset, are misaligned.");
             /**
              * This inner function adds proper change in d13, setting link to
              * inserted bytes.
@@ -364,7 +372,9 @@ var Delta = (function () {
                 if (!ch13.chunks) {
                     ch13.chunks = [];
                 }
-                ch13.chunks.push({ delta: ins12.id, bP: (ins12.bP + insByteOffset), len: overlap });
+                ch13.chunks.push({ delta: ins12.id,
+                    bP: (ins12.bP + insByteOffset),
+                    len: overlap });
                 insByteOffset += overlap;
                 p2 += overlap;
             }
@@ -420,7 +430,8 @@ var Delta = (function () {
             var delByteOffset = (('number' === typeof byteOffset) ? byteOffset : 0);
             var del23end = del23.ifP + del23.len;
             var x, overlap;
-            assert.ok(((p2 - delByteOffset) === del23.ifP), "Internal counter " + "point 2, and inserted bytes offset, are misaligned.");
+            assert.ok(((p2 - delByteOffset) === del23.ifP), "Internal counter " +
+                "point 2, and inserted bytes offset, are misaligned.");
             /**
              * This inner function adds proper change in d13.
              * Closed over delByteOffset and p2 are updated in the call.
@@ -519,6 +530,7 @@ function orderChangesAlongP2(d12, d23) {
     var i12 = 0;
     var i23 = 0;
     var ch12, ch23;
+    // loop for comparisons of changes' starting positions
     while (true) {
         ch12 = d12.changes[i12];
         ch23 = d23.changes[i23];

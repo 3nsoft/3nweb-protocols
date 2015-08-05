@@ -19,15 +19,33 @@
 var base64 = require('./base64');
 var utf8 = require('./utf8');
 function isLikeJsonKey(jkey) {
-    return (('object' === typeof jkey) && !!jkey && ('string' === typeof jkey.alg) && !!jkey.alg && ('string' === typeof jkey.kid) && !!jkey.kid && ('string' === typeof jkey.k) && !!jkey.k && ('string' === typeof jkey.kid && !!jkey.kid));
+    return (('object' === typeof jkey) && !!jkey &&
+        ('string' === typeof jkey.alg) && !!jkey.alg &&
+        ('string' === typeof jkey.kid) && !!jkey.kid &&
+        ('string' === typeof jkey.k) && !!jkey.k &&
+        ('string' === typeof jkey.kid && !!jkey.kid));
 }
 exports.isLikeJsonKey = isLikeJsonKey;
 function isLikeSignedLoad(load) {
-    return (('object' === typeof load) && !!load && ('string' === typeof load.alg) && !!load.alg && ('string' === typeof load.kid) && !!load.kid && ('string' === typeof load.sig) && !!load.sig && ('string' === typeof load.load && !!load.load));
+    return (('object' === typeof load) && !!load &&
+        ('string' === typeof load.alg) && !!load.alg &&
+        ('string' === typeof load.kid) && !!load.kid &&
+        ('string' === typeof load.sig) && !!load.sig &&
+        ('string' === typeof load.load && !!load.load));
 }
 exports.isLikeSignedLoad = isLikeSignedLoad;
 function isLikeKeyCert(cert) {
-    return (('object' === typeof cert) && !!cert && ('number' === typeof cert.expiresAt) && ('number' === typeof cert.issuedAt) && (cert.expiresAt > cert.issuedAt) && ('string' === typeof cert.issuer) && !!cert.issuer && ('object' === typeof cert.cert) && !!cert.cert && ('object' === typeof cert.cert.principal) && !!cert.cert.principal && ('string' === typeof cert.cert.principal.address) && !!cert.cert.principal.address && isLikeJsonKey(cert.cert.publicKey));
+    return (('object' === typeof cert) && !!cert &&
+        ('number' === typeof cert.expiresAt) &&
+        ('number' === typeof cert.issuedAt) &&
+        (cert.expiresAt > cert.issuedAt) &&
+        ('string' === typeof cert.issuer) && !!cert.issuer &&
+        ('object' === typeof cert.cert) && !!cert.cert &&
+        ('object' === typeof cert.cert.principal) &&
+        !!cert.cert.principal &&
+        ('string' === typeof cert.cert.principal.address) &&
+        !!cert.cert.principal.address &&
+        isLikeJsonKey(cert.cert.publicKey));
 }
 exports.isLikeKeyCert = isLikeKeyCert;
 function isLikeSignedKeyCert(load) {
@@ -57,11 +75,14 @@ function keyFromJson(key, use, alg, klen) {
             };
         }
         else {
-            throw new Error("Key " + key.kid + ", should be used with unsupported algorithm '" + key.alg + "'");
+            throw new Error("Key " + key.kid +
+                ", should be used with unsupported algorithm '" +
+                key.alg + "'");
         }
     }
     else {
-        throw new Error("Key " + key.kid + " has incorrect use '" + key.use + "', instead of '" + use + "'");
+        throw new Error("Key " + key.kid + " has incorrect use '" + key.use +
+            "', instead of '" + use + "'");
     }
 }
 exports.keyFromJson = keyFromJson;

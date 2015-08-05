@@ -41,7 +41,8 @@
 function encodeBytesToBase64Universal(bytes, intToLetDict, pad) {
     var paddedSectionLength = (bytes.length % 3);
     var fullTriplesLength = (bytes.length - paddedSectionLength);
-    var chars = new Array(4 * (fullTriplesLength / 3 + (paddedSectionLength === 0 ? 0 : 1)));
+    var chars = new Array(4 * (fullTriplesLength / 3 +
+        (paddedSectionLength === 0 ? 0 : 1)));
     var charIndex = 0;
     var n;
     var b1;
@@ -101,13 +102,15 @@ function encodeBytesToBase64Universal(bytes, intToLetDict, pad) {
 function getNumberFrom(letToIntDict, ch) {
     var n = letToIntDict[ch];
     if ('undefined' === typeof n) {
-        throw new Error("String contains character '" + ch + "', which is not present in base64 representation alphabet.");
+        throw new Error("String contains character '" + ch +
+            "', which is not present in base64 representation alphabet.");
     }
     return n;
 }
 function decodeUniversalBase64String(str, letToIntDict, pad) {
     if ((str.length % 4) > 0) {
-        throw new Error("Given string's length is not multiple of four, while " + "base64 representation with mandatory padding expects such length.");
+        throw new Error("Given string's length is not multiple of four, while " +
+            "base64 representation with mandatory padding expects such length.");
     }
     if (str.length === 0) {
         return new Uint8Array(0);
@@ -119,8 +122,10 @@ function decodeUniversalBase64String(str, letToIntDict, pad) {
     else if (str[str.length - 1] === pad) {
         numOfBytesInPaddedSection = 2;
     }
-    var bytes = new Uint8Array((str.length / 4 - 1) * 3 + (numOfBytesInPaddedSection === 0 ? 3 : numOfBytesInPaddedSection));
-    var strLenOfCompleteGroups = (str.length - (numOfBytesInPaddedSection === 0 ? 0 : 4));
+    var bytes = new Uint8Array((str.length / 4 - 1) * 3 +
+        (numOfBytesInPaddedSection === 0 ? 3 : numOfBytesInPaddedSection));
+    var strLenOfCompleteGroups = (str.length -
+        (numOfBytesInPaddedSection === 0 ? 0 : 4));
     var byteIndex = 0;
     var b;
     var n;

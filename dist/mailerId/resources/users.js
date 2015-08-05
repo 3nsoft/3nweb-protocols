@@ -51,7 +51,8 @@ function readUserFromFolder(dataPath) {
             user = JSON.parse(str);
         }
         catch (e) {
-            console.error("File " + file + " cannot by intertpreted as json:\n" + str);
+            console.error("File " + file +
+                " cannot by intertpreted as json:\n" + str);
             continue;
         }
         if (users[user.id]) {

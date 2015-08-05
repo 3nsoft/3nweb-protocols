@@ -36,9 +36,8 @@ function makeApp(sessions, users, makeMailerIdAuthorizer) {
     var loginPath = '/login/mailerid/';
     app.post(loginPath + midLoginApi.startSession.URL_END, sessions.checkSession(), bodyParsers.json('1kb'), startSession.makeHandler(
     // start sessions for all in this test app
-    function (uid) {
-        return Q.when(true);
-    }, sessions.generate));
+    // start sessions for all in this test app
+    function (uid) { return Q.when(true); }, sessions.generate));
     app.post(loginPath + midLoginApi.authSession.URL_END, sessions.ensureOpenedSession(), bodyParsers.json('4kb'), authorize.makeHandler(makeMailerIdAuthorizer));
     app.post('/make-account', sessions.ensureAuthorizedSession(), addAccount.makeHandler(users.add));
     app.get('/get-account-info', sessions.ensureAuthorizedSession(), getAccount.makeHandler(users.getInfo));

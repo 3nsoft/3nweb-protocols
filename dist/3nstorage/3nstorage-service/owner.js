@@ -51,11 +51,19 @@ function makeApp(sessions, users, midAuthorizer) {
     app.post('/' + api.finalizeRootTransaction.EXPRESS_URL_END, closeTrans.makeHandler(true, true, users.finalizeTransaction));
     app.post('/' + api.cancelRootTransaction.EXPRESS_URL_END, closeTrans.makeHandler(true, false, users.cancelTransaction));
     // Getting and saving root object
-    app.route('/' + api.rootHeader.EXPRESS_URL_END).get(getBytes.makeHandler(true, users.getRootHeader)).put(putBytes.makeHandler(true, users.saveRootHeader, MAX_CHUNK_SIZE));
-    app.route('/' + api.rootSegs.EXPRESS_URL_END).get(getBytes.makeHandler(true, users.getRootSegments)).put(putBytes.makeHandler(true, users.saveRootSegments, MAX_CHUNK_SIZE));
+    app.route('/' + api.rootHeader.EXPRESS_URL_END)
+        .get(getBytes.makeHandler(true, users.getRootHeader))
+        .put(putBytes.makeHandler(true, users.saveRootHeader, MAX_CHUNK_SIZE));
+    app.route('/' + api.rootSegs.EXPRESS_URL_END)
+        .get(getBytes.makeHandler(true, users.getRootSegments))
+        .put(putBytes.makeHandler(true, users.saveRootSegments, MAX_CHUNK_SIZE));
     // Getting and saving non-root objects
-    app.route('/' + api.objHeader.EXPRESS_URL_END).get(getBytes.makeHandler(false, users.getObjHeader)).put(putBytes.makeHandler(false, users.saveObjHeader, MAX_CHUNK_SIZE));
-    app.route('/' + api.objSegs.EXPRESS_URL_END).get(getBytes.makeHandler(false, users.getObjSegments)).put(putBytes.makeHandler(false, users.saveObjSegments, MAX_CHUNK_SIZE));
+    app.route('/' + api.objHeader.EXPRESS_URL_END)
+        .get(getBytes.makeHandler(false, users.getObjHeader))
+        .put(putBytes.makeHandler(false, users.saveObjHeader, MAX_CHUNK_SIZE));
+    app.route('/' + api.objSegs.EXPRESS_URL_END)
+        .get(getBytes.makeHandler(false, users.getObjSegments))
+        .put(putBytes.makeHandler(false, users.saveObjSegments, MAX_CHUNK_SIZE));
     return app;
 }
 exports.makeApp = makeApp;

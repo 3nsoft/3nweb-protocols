@@ -19,16 +19,19 @@ function makeHandler(makeAccountFunc) {
     }
     return function (req, res, next) {
         var userId = req.session.params.userId;
-        makeAccountFunc(userId).then(function (created) {
+        makeAccountFunc(userId)
+            .then(function (created) {
             if (created) {
                 res.status(201).end();
             }
             else {
                 res.status(473).send("Account for " + userId + " already exists.");
             }
-        }).fail(function (err) {
+        })
+            .fail(function (err) {
             next(err);
-        }).done();
+        })
+            .done();
     };
 }
 exports.makeHandler = makeHandler;

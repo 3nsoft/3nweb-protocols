@@ -31,21 +31,23 @@ SINGLE_BYTE_BUF[0] = 0;
  */
 function createEmptyFile(filePath, fileSize, keepFileOpen) {
     var fileDescr = null;
-    var promise = Q.nfcall(fs.open, filePath, 'wx').then(function (fd) {
+    var promise = Q.nfcall(fs.open, filePath, 'wx')
+        .then(function (fd) {
         fileDescr = fd;
         if (fileSize > 0) {
             return Q.nfcall(fs.write, fd, SINGLE_BYTE_BUF, 0, 1, fileSize - 1);
         }
-    }).fail(function (err) {
+    })
+        .fail(function (err) {
         if (fileDescr) {
             var fd = fileDescr;
             fileDescr = null;
-            return Q.nfcall(fs.close, fd).fin(function () {
-                throw err;
-            });
+            return Q.nfcall(fs.close, fd)
+                .fin(function () { throw err; });
         }
         throw err;
-    }).then(function () {
+    })
+        .then(function () {
         if (keepFileOpen) {
             return fileDescr;
         }
@@ -75,7 +77,8 @@ exports.existsFolderSync = existsFolderSync;
  * @return a promise, resolvable to file's size.
  */
 function getFileSize(filePath) {
-    return Q.nfcall(fs.stat, filePath).then(function (st) {
+    return Q.nfcall(fs.stat, filePath)
+        .then(function (st) {
         return st.size;
     });
 }
@@ -93,10 +96,12 @@ function write(fd, pos, buf) {
         bytesWritten += bNum;
         pos += bNum;
         if (bytesWritten < buf.length) {
-            return Q.nfcall(fs.write, fd, buf, bytesWritten, buf.length - bytesWritten, pos).then(writeContinuation);
+            return Q.nfcall(fs.write, fd, buf, bytesWritten, buf.length - bytesWritten, pos)
+                .then(writeContinuation);
         }
     }
-    var promise = Q.nfcall(fs.write, fd, buf, 0, buf.length, pos).then(writeContinuation);
+    var promise = Q.nfcall(fs.write, fd, buf, 0, buf.length, pos)
+        .then(writeContinuation);
     return promise;
 }
 exports.write = write;
@@ -108,8 +113,10 @@ exports.write = write;
  * to it.
  */
 function writeToExistingFile(filePath, pos, buf) {
-    var promise = Q.nfcall(fs.open, filePath, 'r+').then(function (fd) {
-        return write(fd, pos, buf).fin(function () {
+    var promise = Q.nfcall(fs.open, filePath, 'r+')
+        .then(function (fd) {
+        return write(fd, pos, buf)
+            .fin(function () {
             return Q.nfcall(fs.close, fd);
         });
     });
@@ -145,14 +152,14 @@ function streamToExistingFile(filePath, pos, chunkLen, inStr, bufSize) {
         var filePos = pos;
         pos += bytes.length;
         var doWrite = function () {
-            return writeToExistingFile(filePath, filePos, bytes).then(function () {
+            return writeToExistingFile(filePath, filePos, bytes)
+                .then(function () {
                 bytesWritten += bytes.length;
                 if (chunkLen === bytesWritten) {
                     setDone();
                 }
-            }).fail(function (err) {
-                setDone(err);
-            });
+            })
+                .fail(function (err) { setDone(err); });
         };
         if (writeInProcess) {
             writeInProcess = writeInProcess.then(doWrite);
@@ -172,7 +179,8 @@ function streamToExistingFile(filePath, pos, chunkLen, inStr, bufSize) {
             if ((bytesRead + data.length) > chunkLen) {
                 setDone("More bytes in a stream than chunkLen");
             }
-            else if (((bufInd + data.length) < bufSize) && ((bufInd + data.length) < chunkLen)) {
+            else if (((bufInd + data.length) < bufSize) &&
+                ((bufInd + data.length) < chunkLen)) {
                 data.copy(buf, bufInd);
                 bufInd += data.length;
                 bytesRead += data.length;
@@ -224,13 +232,15 @@ function read(fd, pos, buf) {
         bytesRead += bNum;
         pos += bNum;
         if (bytesRead < buf.length) {
-            return Q.nfcall(fs.read, fd, buf, bytesRead, buf.length - bytesRead, pos).then(readContinuation);
+            return Q.nfcall(fs.read, fd, buf, bytesRead, buf.length - bytesRead, pos)
+                .then(readContinuation);
         }
         else {
             return;
         }
     }
-    var promise = Q.nfcall(fs.read, fd, buf, 0, buf.length, pos).then(readContinuation);
+    var promise = Q.nfcall(fs.read, fd, buf, 0, buf.length, pos)
+        .then(readContinuation);
     return promise;
 }
 exports.read = read;
@@ -246,8 +256,10 @@ exports.read = read;
  * filled up with bytes.
  */
 function readFromFile(filePath, pos, buf) {
-    var promise = Q.nfcall(fs.open, filePath, 'r').then(function (fd) {
-        return read(fd, pos, buf).fin(function () {
+    var promise = Q.nfcall(fs.open, filePath, 'r')
+        .then(function (fd) {
+        return read(fd, pos, buf)
+            .fin(function () {
             return Q.nfcall(fs.close, fd);
         });
     });
@@ -260,19 +272,24 @@ exports.readFromFile = readFromFile;
  * @returns a promise, resolvable, when a folder has been recursively removed.
  */
 function rmdir(folder) {
-    var promise = Q.nfcall(fs.readdir, folder).then(function (files) {
+    var promise = Q.nfcall(fs.readdir, folder)
+        .then(function (files) {
         if (files.length === 0) {
             return Q.nfcall(fs.rmdir, folder);
         }
         var rmTasks = [];
         files.forEach(function (name) {
             var innerPath = folder + '/' + name;
-            var task = Q.nfcall(fs.stat, innerPath).then(function (st) {
-                return (st.isDirectory() ? rmdir(innerPath) : Q.nfcall(fs.unlink, innerPath));
+            var task = Q.nfcall(fs.stat, innerPath)
+                .then(function (st) {
+                return (st.isDirectory() ?
+                    rmdir(innerPath) :
+                    Q.nfcall(fs.unlink, innerPath));
             });
             rmTasks.push(task);
         });
-        return Q.all(rmTasks).then(function () {
+        return Q.all(rmTasks)
+            .then(function () {
             return Q.nfcall(fs.rmdir, folder);
         });
     });
@@ -324,13 +341,13 @@ function streamFromFile(filePath, pos, len, outStr, bufSize) {
             if (leftToRead < buf.length) {
                 buf = buf.slice(0, leftToRead);
             }
-            readInProcess = readFromFile(filePath, pos + bytesRead, buf).then(function () {
+            readInProcess = readFromFile(filePath, pos + bytesRead, buf)
+                .then(function () {
                 canReadBuf = true;
                 readInProcess = null;
                 readAndStream();
-            }).fail(function (err) {
-                setDone(err);
-            });
+            })
+                .fail(function (err) { setDone(err); });
             readInProcess.done();
         }
     }

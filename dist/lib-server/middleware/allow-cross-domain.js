@@ -21,7 +21,8 @@ function allowCrossDomain(allowHeaders, allowMethods) {
     var headersToAllow;
     if (allowHeaders) {
         if (!Array.isArray(allowHeaders)) {
-            throw new Error("Given argument headersToAllow must be either " + "array of strings, or null/undefined");
+            throw new Error("Given argument headersToAllow must be either " +
+                "array of strings, or null/undefined");
         }
         headersToAllow = allowHeaders.join(', ');
     }
@@ -31,7 +32,8 @@ function allowCrossDomain(allowHeaders, allowMethods) {
     var methodsToAllow;
     if (allowMethods) {
         if (!Array.isArray(allowMethods)) {
-            throw new Error("Given argument methodsToAllow must be either " + "array of strings, or null/undefined");
+            throw new Error("Given argument methodsToAllow must be either " +
+                "array of strings, or null/undefined");
         }
         methodsToAllow = allowMethods.join(', ');
     }

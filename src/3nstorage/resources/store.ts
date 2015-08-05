@@ -65,6 +65,7 @@ import fErrMod = require('../../lib-common/file-err');
 import nacl = require('ecma-nacl');
 var xsp = nacl.fileXSP;
 import confUtil = require('../../lib-server/conf-util');
+import os = require('os');
 
 export var SC = {
 	USER_UNKNOWN: 'user-unknown',
@@ -167,6 +168,12 @@ class SpaceTracker {
 	//		thing. Thus, we try call a few times here, and this simple approach
 	//		is a good enough for the demo, but may not be ok for production.
 	private diskUsed(path: string, runNum = 0): Q.Promise<number> {
+		// XXX hack due to missing du in windows
+		if (os.type().match('Windows')) {
+			console.warn("\nOn Windows meaningful check of space, "+
+				"occupied by user is skipped, for now");
+			return Q.when(0);
+		}
 		return Q.nfcall<string>(exec, "du -k -s "+path)
 		.then((stdOut) => {
 			var kUsed = parseInt(stdOut);
