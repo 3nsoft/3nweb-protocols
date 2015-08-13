@@ -27,11 +27,27 @@ And are using [NaCl](http://nacl.cr.yp.to/) library, that provides such high-lev
 
 ## Demo implementation of protocol specs
 
-To run demo, one needs node.
+Demo services are express apps on node.
+Client side apps are served on a web page only for demonstration convenience, while production code should sit in a local app, to mitigate threat of js-injection.
+
+All of code is written in TypeScript, with source in ``` src ``` folder.
+[Gulp](http://gulpjs.com/) is used to compile everything.
+Folder ``` dist ``` contains executable js.
+To run directly from download, do
+```
+npm install
+node dist/app.js
+```
+Or you may want to look into gulp's tasks, after dependencies' installation.
+Make sure to have gulp installed globally, and follow instructions printed by
+```
+gulp help
+```
+
 
 ## Authenticated Secure Mail (ASMail)
 
-![Overall message exchange in ASMail](docs/readme-imgs/asmail-overall_msg_exchange.svg "Message exchange in ASMail") 
+![Overall message exchange in ASMail](docs/readme-imgs/asmail-overall_msg_exchange.png "Message exchange in ASMail") 
 
 In ASMail sender talks directly to recipient's server:  
  1. When sender (e.g. bob@bank.com) needs to send a message to alice@company.com, his client software gets from company.com's DNS record a location of ASMail service that services all users at a said domain.  
@@ -41,7 +57,7 @@ Such setup allows service provider to transparently implement any appropriate ex
 
 ### Message delivery to recipient's server
 
-![Start of sending session](docs/readme-imgs/ASMail-sending-req1a-start.svg "Start of sending session in ASMail")
+![Start of sending session](docs/readme-imgs/ASMail-sending-req1a-start.png "Start of sending session in ASMail")
 
 The very first sender's request establishes a session, with which a message transmition occurs. Sender sends to server:  
  - recipient's address, so that server knows to who message is for;
@@ -57,19 +73,19 @@ Server starts a session, if given parameters are acceptable, and fails when:
 In OK reply, server sends an allowed maximum size, and a maximum chunk size, which is used to split big objects into separate requests.  
 Note that a recipient may configure her server to allow different message sizes: GB's for a trusted group (particular invitation token), and KB's for strangers.
 
-![Message sending pre-flight](docs/readme-imgs/ASMail-sending-req1b-pre-flight.svg "Pre-flight in message sending")
+![Message sending pre-flight](docs/readme-imgs/ASMail-sending-req1b-pre-flight.png "Pre-flight in message sending")
 
 Sender's software may perform a pre-flight request, which is the same as the first request except that no session is started.
 
 Pre-flight request is useful in a situation, when message limits must be known before a message is formed, e.g. audio or video mail.
 
-![Restart of sending session](docs/readme-imgs/ASMail-sending-req1c-restart.svg "Restart of sending session in MailerId")
+![Restart of sending session](docs/readme-imgs/ASMail-sending-req1c-restart.png "Restart of sending session in MailerId")
 
 Server may allow a delivery-restarting for an already expired session.
 
 This first request is identical to that of sending a new message, except that sender must provide an id of a message, which transmition has not been properly finalized.
 
-![Optional authentication to server](docs/readme-imgs/ASMail-sending-req2.svg "Optional authentication to server in MailerId")
+![Optional authentication to server](docs/readme-imgs/ASMail-sending-req2.png "Optional authentication to server in MailerId")
 
 When delivery is not anonymous to server, sender should prove its identity to the server. For this an identity providing protocol is needed.
 
@@ -79,7 +95,7 @@ BrowserID is a non-tracking identity protocol, developed by Mozilla for use in a
 
 So, sender creates a MailerId assertion, based on a current session id. Server cryptographically checks it, and either allows further actions, or not, based on the result.
 
-![Getting recipient's public key](docs/readme-imgs/ASMail-sending-req3.svg "Getting recipient's public key in MailerId")
+![Getting recipient's public key](docs/readme-imgs/ASMail-sending-req3.png "Getting recipient's public key in MailerId")
 
 In a situation, when a sender has not yet established a key pair, known only to it and to a recipient, an introductory (initial) key should be given by recipient's server. Recipient generates such key, certifies public key with MailerId, and gives resulting certificates to its server, so that the server provides key certificates to whoever need them.
 
@@ -90,17 +106,17 @@ Notice two important things:
 When parties exchange messages, new keys are constantly introduced and used, allowing for PFS (Perfect Forward Secrecy). Therefore, an adjective “introductory” is used to highlight the fact that given key is not used for all messages, and that it will be used only in an initial message exchange.
 
 
-![Sending metadata](docs/readme-imgs/ASMail-sending-req4.svg "Sending message metadata in MailerId")
+![Sending metadata](docs/readme-imgs/ASMail-sending-req4.png "Sending message metadata in MailerId")
 
 This request starts message delivery. Sender gives to server a metadata part, which has to be plaintext, as it contains a list of all objects that comprise the message and crypto ids that are used by a recipient to identify keys that will decrypt the message.
 
 Note that metadata does not contain anything else. Common headers like “Subject” are all part of the main object, and, therefore, are encrypted and available only to the recipient.
 
-![Sending encrypted message data](docs/readme-imgs/ASMail-sending-req5.svg "Sending encrypted message data in MailerId")
+![Sending encrypted message data](docs/readme-imgs/ASMail-sending-req5.png "Sending encrypted message data in MailerId")
 
 Objects are delivered in whole or in chunks by this request, which is done many times till a message is completely sent to the server.
 
-![Completing message sending session](docs/readme-imgs/ASMail-sending-req6.svg "Completing message sending session in MailerId")
+![Completing message sending session](docs/readme-imgs/ASMail-sending-req6.png "Completing message sending session in MailerId")
 
 This request closes message delivery session. With it sender assures server that it has been given all message parts.
 
@@ -122,7 +138,7 @@ MailerId process involves three parties:
  2. User of an identity service
  3. Relying party, to who user wants to prove her identity
 
-![Provisioning phase](docs/readme-imgs/mailerid-provisioning.svg "Provisioning phase of MailerId protocol")
+![Provisioning phase](docs/readme-imgs/mailerid-provisioning.png "Provisioning phase of MailerId protocol")
 
 In the first stage, User generates a signing key pair, logs into the service, and asks Identity Provider to make (provision) a certificate for his public key.
 
@@ -130,7 +146,7 @@ User's certificate can be used till its expiration. Therefore, provisioning step
 
 Unlike BrowserID, User's login in MailerId is done via Public Key Login (PKL) process. PKL does not require having a browser. PKL can be used for both key-only, password-based, and multi-factor authentications. See Public Key Login section below.
 
-![Authentication of public keys](docs/readme-imgs/mailerid-authentication_of_communication_keys.svg "MailerId used to authenticate public keys")
+![Authentication of public keys](docs/readme-imgs/mailerid-authentication_of_communication_keys.png "MailerId used to authenticate public keys")
 
 With a provisioned certificate for his signing key, User can sign his other public key. For example, ASMail introductory key should be signed with MailerId key.
 
@@ -141,7 +157,7 @@ When Alice (relying party) has to verify a key that is claimed to be for  bob@ba
 
 Note that provider gives user two certificates: one for user's key, signed by provider's key, and another one is for provider's key, signed by root key. Root key certificate is self signed, and should have a long validity period. Provider keys have shorter life and are changed by provider from time to time.
 
-![Service login](docs/readme-imgs/mailerid-authentication_to_services.svg "Login into service with MailerId")
+![Service login](docs/readme-imgs/mailerid-authentication_to_services.png "Login into service with MailerId")
 
 With a provisioned certificate for his signing key, User can sign MailerId assertions to authenticate sessions. One example is authentication of a sender to ASMail server, when delivery is non-anonymous. Another example is authenticating a session to any web site/service.
 
@@ -155,7 +171,7 @@ Note that, although MailerId protocol is developed for use in ASMail, the protoc
 
 This protocol was inspired by a desire of having an analog of SSH key-based login, in which Site (service) has on file User's public key, and User has prove its knowledge of a corresponding secret key.
 
-![PKL flow](docs/readme-imgs/PKL.svg "Public Key Login exchange flow") 
+![PKL flow](docs/readme-imgs/PKL.png "Public Key Login exchange flow") 
 
 When an account is created with a Site, User registers its public key together with additional key derivation parameters (e.g. salt + scrypt parameters).
 
