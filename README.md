@@ -1,3 +1,8 @@
+
+### Archive note
+
+3NWeb has matured. Documentation can be found at [IEEE Open Source section](https://opensource.ieee.org/3nweb/architecture), pointing to reference implementation.
+
 # 3NWeb protocols and demo implementation
 
 **3NWeb** is a set of protocols that sincerely implement [Principle of Least Authority (POLA)](https://en.wikipedia.org/wiki/Principle_of_least_privilege) in services with client+server architecture.
